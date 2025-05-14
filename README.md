@@ -1,1 +1,1 @@
-# Lora.Umbrella
+# Lora Card Game
