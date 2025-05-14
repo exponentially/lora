@@ -23,7 +23,7 @@ defmodule LoraWeb.MixProject do
   def application do
     [
       mod: {LoraWeb.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools],
     ]
   end
 
@@ -56,7 +56,8 @@ defmodule LoraWeb.MixProject do
       {:gettext, "~> 0.26"},
       {:lora, in_umbrella: true},
       {:jason, "~> 1.2"},
-      {:bandit, "~> 1.5"}
+      {:bandit, "~> 1.5"},
+      {:mock, "~> 0.3.0", only: :test}
     ]
   end
 

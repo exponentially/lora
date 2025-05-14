@@ -3,14 +3,15 @@ defmodule LoraWeb.GameLive do
   require Logger
 
   alias Phoenix.PubSub
-  alias Lora.{Deck, Contract}
+  alias Lora.{Contract}
 
   @impl true
   def mount(%{"id" => game_id}, session, socket) do
-    player_id = session["player_id"] || get_flash(socket, :player_id)
-    player_name = session["player_name"] || get_flash(socket, :player_name)
+    player_id =  Map.fetch!(session, "player_id")
+    player_name = session["player_name"] || player_id
 
-    if is_nil(player_id) or is_nil(player_name) do
+    if is_nil(player_id) do
+      Logger.error("Missing player information in session or socket assigns")
       {:ok, redirect_to_lobby(socket, "Missing player information")}
     else
       if connected?(socket) do
@@ -68,7 +69,8 @@ defmodule LoraWeb.GameLive do
         {:noreply, socket}
 
       {:error, reason} ->
-        {:noreply, put_flash(socket, :error, reason)}
+        # Use put_flash from Phoenix.LiveView
+        {:noreply, Phoenix.LiveView.put_flash(socket, :error, reason)}
     end
   end
 
@@ -82,18 +84,20 @@ defmodule LoraWeb.GameLive do
         {:noreply, socket}
 
       {:error, reason} ->
-        {:noreply, put_flash(socket, :error, reason)}
+        # Use put_flash from Phoenix.LiveView
+        {:noreply, Phoenix.LiveView.put_flash(socket, :error, reason)}
     end
   end
 
   @impl true
   def handle_info({:game_state, game}, socket) do
-    socket = assign_game_state(socket, game, socket.assigns.player_id)
+    player_id = Map.get(socket.assigns, :player_id)
+    socket = assign_game_state(socket, game, player_id)
     {:noreply, socket}
   end
 
   @impl true
-  def handle_info({event_type, payload}, socket) when event_type in [:card_played, :player_passed, :player_joined, :player_disconnected, :player_reconnected, :game_started, :game_over, :player_timeout] do
+  def handle_info({event_type, _payload}, socket) when event_type in [:card_played, :player_passed, :player_joined, :player_disconnected, :player_reconnected, :game_started, :game_over, :player_timeout] do
     # Handle various game events if needed
     # For now, these events are just for information and don't require specific handling
     {:noreply, socket}
@@ -101,8 +105,8 @@ defmodule LoraWeb.GameLive do
 
   @impl true
   def terminate(_reason, socket) do
-    if connected?(socket) do
-      # Inform the game server that the player disconnected
+    if connected?(socket) and Map.has_key?(socket.assigns, :game_id) and Map.has_key?(socket.assigns, :player_id) do
+      # Only disconnect from game if we have valid game_id and player_id
       Lora.player_disconnect(socket.assigns.game_id, socket.assigns.player_id)
     end
 
@@ -123,8 +127,9 @@ defmodule LoraWeb.GameLive do
     |> assign(:legal_moves, get_legal_moves(game, player))
   end
 
+  defp get_legal_moves(_game, nil), do: []
   defp get_legal_moves(game, player) do
-    if game.phase == :playing and player and game.current_player == player.seat do
+    if game.phase == :playing and game.current_player == player.seat do
       {:ok, legal_cards} = Lora.legal_moves(game.id, player.id)
       legal_cards
     else
@@ -145,7 +150,7 @@ defmodule LoraWeb.GameLive do
   defp redirect_to_lobby(socket, flash_message) do
     socket
     |> put_flash(:error, flash_message)
-    |> push_navigate(to: Routes.lobby_path(socket, :index))
+    |> push_navigate(to: ~p"/")
   end
 
   # View helper functions

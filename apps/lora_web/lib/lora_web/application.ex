@@ -7,6 +7,9 @@ defmodule LoraWeb.Application do
 
   @impl true
   def start(_type, _args) do
+    # Bypass phoenix_ecto dependency issues since we're not using a database
+    Application.put_env(:phoenix, :json_library, Jason)
+
     children = [
       LoraWeb.Telemetry,
       # Start a worker by calling: LoraWeb.Worker.start_link(arg)

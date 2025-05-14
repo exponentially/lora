@@ -87,6 +87,8 @@ defmodule LoraWeb do
 
       # HTML escaping functionality
       import Phoenix.HTML
+      # HTML Form helpers
+      import Phoenix.HTML.Form
       # Core UI components
       import LoraWeb.CoreComponents
 

@@ -1,252 +1,233 @@
-<div class="container mx-auto px-4 py-8">
-  <%= if @loading do %>
-    <div class="text-center">
-      <p class="text-xl">Loading game...</p>
-    </div>
-  <% else %>
-    <div class="mb-4 flex justify-between items-center">
-      <div>
-        <h1 class="text-2xl font-bold">Game: <%= @game.id %></h1>
-        <p>
-          <%= case @game.phase do %>
-            <% :lobby -> %>
-              Waiting for players (<%= length(@game.players) %>/4)
-            <% :playing -> %>
-              Playing: <%= Contract.name(@current_contract) %> 
-              (Deal <%= @game.dealt_count %> of 28)
-            <% :finished -> %>
-              Game Over
-          <% end %>
-        </p>
-      </div>
-      
-      <div class="text-right">
-        <p>You: <%= @player_name %> (Seat <%= @player.seat %>)</p>
-      </div>
-    </div>
-    
-    <%= if @game.phase == :lobby do %>
-      <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-        <h2 class="text-xl font-semibold mb-4">Waiting for Players</h2>
-        <p class="mb-4">Share this code with your friends: <strong class="text-lg"><%= @game.id %></strong></p>
-        
-        <div class="space-y-2">
-          <p class="font-medium">Players:</p>
-          <%= for player <- @game.players do %>
-            <div class="p-2 bg-gray-100 rounded">
-              <%= player.name %> (Seat <%= player.seat %>)
-            </div>
-          <% end %>
-          
-          <%= for _ <- 1..(4 - length(@game.players)) do %>
-            <div class="p-2 bg-gray-200 rounded text-gray-500">
-              Waiting for player...
-            </div>
-          <% end %>
-        </div>
+<div class="min-h-screen bg-gray-100 py-6 flex flex-col justify-center">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <%= if @loading do %>
+      <div class="text-center py-12">
+        <div class="animate-pulse text-2xl font-semibold">Loading game...</div>
       </div>
     <% else %>
-      <div class="grid grid-cols-1 gap-6">
-        <!-- Game Information -->
-        <div class="bg-white rounded-lg shadow-md p-4">
-          <div class="flex justify-between mb-4">
-            <div>
-              <h2 class="text-xl font-semibold"><%= Contract.name(@current_contract) %></h2>
-              <p class="text-gray-600"><%= Contract.description(@current_contract) %></p>
-            </div>
-            <div>
-              <p>Dealer: Seat <%= @game.dealer_seat %> (<%= find_player_name(@game, @game.dealer_seat) %>)</p>
-              <p>Current Turn: Seat <%= @game.current_player %> (<%= find_player_name(@game, @game.current_player) %>)</p>
-            </div>
+      <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
+        <div class="px-4 py-5 border-b border-gray-200 sm:px-6 flex justify-between items-center">
+          <div>
+            <h1 class="text-lg leading-6 font-medium text-gray-900">
+              Game: <%= @game.id %>
+            </h1>
+            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+              <%= Contract.name(@current_contract) %>: <%= Contract.description(@current_contract) %>
+            </p>
           </div>
-          
-          <!-- Scoreboard -->
-          <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Player</th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
-                <%= for {seat, score} <- @game.scores do %>
-                  <tr class="<%= if seat == @player.seat, do: "bg-indigo-50" %>">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      Seat <%= seat %> (<%= find_player_name(@game, seat) %>)
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <%= score %>
-                    </td>
-                  </tr>
-                <% end %>
-              </tbody>
-            </table>
+          <div>
+            <span class="inline-flex items-center rounded-md bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
+              Dealer: <%= find_player_name(@game, @game.dealer_seat) %>
+            </span>
+            <span class="inline-flex items-center rounded-md bg-green-100 px-2 py-1 text-xs font-medium text-green-700 ml-2">
+              Current Player: <%= find_player_name(@game, @game.current_player) %>
+            </span>
           </div>
         </div>
-      
-        <!-- Game Board Area -->
-        <div class="bg-white rounded-lg shadow-md p-4">
-          <%= if @current_contract == :lora do %>
-            <!-- Lora Layout -->
-            <div class="mb-4">
-              <h3 class="text-lg font-medium mb-2">Lora Layout</h3>
-              <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <%= for {suit, cards} <- @game.lora_layout do %>
-                  <div class="border p-2">
-                    <h4 class="font-medium mb-1"><%= format_suit(suit) %></h4>
-                    <div class="flex flex-wrap gap-2">
-                      <%= for {_, rank} <- cards do %>
-                        <div class="card-mini <%= suit_color(suit) %>">
-                          <%= format_rank(rank) %>
+      </div>
+
+      <!-- Game board -->
+      <%= if !@player do %>
+        <div class="text-center py-12">
+          <div class="text-2xl font-semibold">Waiting for game to start...</div>
+        </div>
+      <% else %>
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-6">
+          <!-- Left side - Opponent hands and board -->
+          <div class="md:col-span-8 space-y-4">
+            <!-- Top player (opponent across) -->
+            <div class="bg-white p-4 rounded-lg shadow text-center">
+              <div class="text-sm font-semibold mb-2">
+                <%= find_player_name(@game, rem(@player.seat + 1, 4) + 1) %>
+                <%= if @game.current_player == rem(@player.seat + 1, 4) + 1 do %>
+                  <span class="ml-2 inline-block w-3 h-3 bg-green-500 rounded-full"></span>
+                <% end %>
+              </div>
+              <div class="flex justify-center space-x-1">
+                <%= if @game.phase == :playing do %>
+                  <%= for _card <- 1..length(Map.get(@game.hands, rem(@player.seat + 1, 4) + 1, [])) do %>
+                    <div class="h-16 w-10 bg-blue-800 rounded-md shadow-md"></div>
+                  <% end %>
+                <% end %>
+              </div>
+            </div>
+
+            <!-- Middle section - Left and right players + current trick -->
+            <div class="flex">
+              <!-- Left player -->
+              <div class="bg-white p-4 rounded-lg shadow flex-shrink-0 w-1/5">
+                <div class="text-sm font-semibold mb-2 text-center">
+                  <%= find_player_name(@game, rem(@player.seat + 2, 4) + 1) %>
+                  <%= if @game.current_player == rem(@player.seat + 2, 4) + 1 do %>
+                    <span class="ml-2 inline-block w-3 h-3 bg-green-500 rounded-full"></span>
+                  <% end %>
+                </div>
+                <div class="flex flex-col items-center space-y-1">
+                  <%= if @game.phase == :playing do %>
+                    <%= for _card <- 1..length(Map.get(@game.hands, rem(@player.seat + 2, 4) + 1, [])) do %>
+                      <div class="h-10 w-16 bg-blue-800 rounded-md shadow-md"></div>
+                    <% end %>
+                  <% end %>
+                </div>
+              </div>
+
+              <!-- Middle - Current trick or Lora layout -->
+              <div class="flex-grow bg-green-800 rounded-lg shadow mx-2 p-4">
+                <%= if @current_contract == :lora do %>
+                  <div class="text-white text-center font-semibold mb-2">Lora Layout</div>
+                  <div class="grid grid-cols-1 gap-2">
+                    <%= for suit <- [:clubs, :diamonds, :hearts, :spades] do %>
+                      <div class="flex items-center">
+                        <div class="w-6 text-white text-xl"><%= format_suit(suit) %></div>
+                        <div class="flex flex-grow overflow-x-auto">
+                          <%= for {card_suit, rank} <- @game.lora_layout[suit] || [] do %>
+                            <div class={"card-mini flex items-center justify-center h-10 w-8 bg-white rounded-sm mr-1 #{suit_color(card_suit)}"}>
+                              <%= format_rank(rank) %>
+                            </div>
+                          <% end %>
                         </div>
-                      <% end %>
-                    </div>
+                      </div>
+                    <% end %>
+                  </div>
+                <% else %>
+                  <div class="text-white text-center font-semibold mb-2">Current Trick</div>
+                  <div class="grid grid-cols-2 grid-rows-2 gap-4 h-full">
+                    <%= for seat <- 1..4 do %>
+                      <div class="flex items-center justify-center">
+                        <% trick_card = Enum.find(@game.trick, fn {s, _} -> s == seat end) %>
+                        <%= if trick_card do %>
+                          <% {_, {suit, rank}} = trick_card %>
+                          <div class={"card flex items-center justify-center h-20 w-14 bg-white rounded-md shadow-md #{suit_color(suit)}"}>
+                            <div class="text-xl">
+                              <%= format_rank(rank) %><%= format_suit(suit) %>
+                            </div>
+                          </div>
+                        <% end %>
+                      </div>
+                    <% end %>
                   </div>
                 <% end %>
               </div>
+
+              <!-- Right player -->
+              <div class="bg-white p-4 rounded-lg shadow flex-shrink-0 w-1/5">
+                <div class="text-sm font-semibold mb-2 text-center">
+                  <%= find_player_name(@game, rem(@player.seat, 4) + 1) %>
+                  <%= if @game.current_player == rem(@player.seat, 4) + 1 do %>
+                    <span class="ml-2 inline-block w-3 h-3 bg-green-500 rounded-full"></span>
+                  <% end %>
+                </div>
+                <div class="flex flex-col items-center space-y-1">
+                  <%= if @game.phase == :playing do %>
+                    <%= for _card <- 1..length(Map.get(@game.hands, rem(@player.seat, 4) + 1, [])) do %>
+                      <div class="h-10 w-16 bg-blue-800 rounded-md shadow-md"></div>
+                    <% end %>
+                  <% end %>
+                </div>
+              </div>
             </div>
-          <% else %>
-            <!-- Current Trick -->
-            <div class="mb-4">
-              <h3 class="text-lg font-medium mb-2">Current Trick</h3>
-              <div class="flex justify-center gap-4">
-                <%= for {trick_seat, {suit, rank}} <- @game.trick do %>
-                  <div class="relative">
-                    <div class="card <%= suit_color(suit) %>">
-                      <div class="text-lg"><%= format_rank(rank) %></div>
-                      <div><%= format_suit(suit) %></div>
-                    </div>
-                    <div class="absolute -top-3 -right-3 bg-gray-800 text-white rounded-full w-6 h-6 flex items-center justify-center">
-                      <%= trick_seat %>
-                    </div>
-                  </div>
+
+            <!-- Scores table -->
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+              <div class="px-4 py-2 bg-gray-50 border-b border-gray-200">
+                <h3 class="text-sm font-medium text-gray-700">Scoreboard</h3>
+              </div>
+              <div class="px-4 py-2">
+                <table class="min-w-full divide-y divide-gray-200">
+                  <thead>
+                    <tr>
+                      <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Player</th>
+                      <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-200">
+                    <%= for seat <- 1..4 do %>
+                      <tr class={if @game.phase == :finished && find_winner(@game.scores) == seat, do: "bg-yellow-100", else: ""}>
+                        <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900"><%= find_player_name(@game, seat) %></td>
+                        <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900 text-right"><%= Map.get(@game.scores, seat, 0) %></td>
+                      </tr>
+                    <% end %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right side - Player hand and actions -->
+          <div class="md:col-span-4 space-y-4">
+            <!-- Player info -->
+            <div class="bg-white p-4 rounded-lg shadow">
+              <div class="flex justify-between items-center">
+                <div>
+                  <h3 class="text-lg font-medium text-gray-900"><%= @player.name %></h3>
+                  <p class="mt-1 text-sm text-gray-500">
+                    Seat: <%= @player.seat %>
+                  </p>
+                </div>
+                <%= if @game.phase == :playing && @game.current_player == @player.seat do %>
+                  <span class="inline-flex items-center rounded-md bg-green-100 px-3 py-1 text-sm font-medium text-green-700">
+                    Your Turn
+                  </span>
                 <% end %>
               </div>
             </div>
-          <% end %>
-        </div>
-        
-        <!-- Player's Hand -->
-        <div class="bg-white rounded-lg shadow-md p-4">
-          <h3 class="text-lg font-medium mb-2">Your Hand</h3>
-          <div class="flex flex-wrap justify-center gap-2">
-            <%= if Map.has_key?(@game.hands, @player.seat) do %>
-              <%= for {suit, rank} <- @game.hands[@player.seat] do %>
-                <div 
-                  phx-click="play_card"
-                  phx-value-suit="<%= suit %>"
-                  phx-value-rank="<%= rank %>"
-                  class="card <%= suit_color(suit) %> <%= if @game.current_player == @player.seat and {suit, rank} in @legal_moves, do: "playable", else: "disabled" %>"
-                >
-                  <div class="text-lg"><%= format_rank(rank) %></div>
-                  <div><%= format_suit(suit) %></div>
+
+            <!-- Player hand -->
+            <div class="bg-white p-4 rounded-lg shadow">
+              <h3 class="text-lg font-medium text-gray-900 mb-4">Your Hand</h3>
+              <div class="flex flex-wrap gap-2 justify-center">
+                <%= for {suit, rank} <- Map.get(@game.hands, @player.seat, []) do %>
+                  <button 
+                    phx-click="play_card"
+                    phx-value-suit={suit}
+                    phx-value-rank={rank}
+                    class={"card flex flex-col items-center justify-center h-24 w-16 rounded-md shadow-md #{if Enum.member?(@legal_moves, {suit, rank}), do: "bg-white hover:bg-gray-100 cursor-pointer", else: "bg-gray-200 cursor-not-allowed"} #{suit_color(suit)}"}
+                    disabled={not Enum.member?(@legal_moves, {suit, rank})}
+                  >
+                    <div class="text-xl">
+                      <%= format_rank(rank) %><%= format_suit(suit) %>
+                    </div>
+                  </button>
+                <% end %>
+              </div>
+              <%= if @current_contract == :lora && @game.current_player == @player.seat && Enum.empty?(@legal_moves) && length(Map.get(@game.hands, @player.seat, [])) > 0 do %>
+                <div class="mt-4 text-center">
+                  <button phx-click="pass" class="bg-yellow-500 text-white py-2 px-4 rounded hover:bg-yellow-600">
+                    Pass (No Legal Moves)
+                  </button>
                 </div>
               <% end %>
-            <% else %>
-              <p class="text-gray-500">No cards in your hand</p>
-            <% end %>
-          </div>
-          
-          <%= if @current_contract == :lora and @game.current_player == @player.seat and @legal_moves == [] and length(@game.hands[@player.seat] || []) > 0 do %>
-            <div class="mt-4 text-center">
-              <button 
-                phx-click="pass"
-                class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded"
-              >
-                Pass (No Legal Moves)
-              </button>
             </div>
-          <% end %>
-        </div>
-        
-        <%= if @game.phase == :finished do %>
-        <div class="bg-white rounded-lg shadow-md p-6 text-center">
-          <h2 class="text-2xl font-bold mb-4">Game Over!</h2>
-          
-          <div class="mb-6">
-            <h3 class="text-lg font-medium mb-2">Final Scores</h3>
-            <div class="overflow-x-auto">
-              <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                  <tr>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Player</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
-                  </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                  <%= for {seat, score} <- Enum.sort_by(@game.scores, fn {_, score} -> score end) do %>
-                    <tr class="<%= if seat == @player.seat, do: "bg-indigo-50" %> <%= if seat == find_winner(@game.scores), do: "font-bold" %>">
-                      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        Seat <%= seat %> (<%= find_player_name(@game, seat) %>)
-                        <%= if seat == find_winner(@game.scores) do %>
-                          <span class="ml-2 text-yellow-500">🏆</span>
-                        <% end %>
-                      </td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <%= score %>
-                      </td>
-                    </tr>
-                  <% end %>
-                </tbody>
-              </table>
-            </div>
-          </div>
-          
-          <.link navigate={Routes.lobby_path(@socket, :index)} class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded">
-            Return to Lobby
-          </.link>
-        </div>
-        <% end %>
-      </div>
-    <% end %>
-  <% end %>
-</div>
 
-<style>
-  .card {
-    width: 60px;
-    height: 90px;
-    border-radius: 4px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    border: 1px solid #ddd;
-    transition: transform 0.2s;
-  }
-  
-  .card-mini {
-    width: 40px;
-    height: 30px;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid #ddd;
-  }
-  
-  .hearts, .diamonds {
-    color: #e53e3e;
-  }
-  
-  .clubs, .spades {
-    color: #1a202c;
-  }
-  
-  .playable {
-    cursor: pointer;
-  }
-  
-  .playable:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    z-index: 10;
-  }
-  
-  .disabled {
-    cursor: not-allowed;
-    opacity: 0.6;
-  }
-</style>
+            <!-- Game info -->
+            <div class="bg-white p-4 rounded-lg shadow">
+              <h3 class="text-lg font-medium text-gray-900 mb-2">Game Info</h3>
+              <dl class="grid grid-cols-2 gap-x-4 gap-y-2">
+                <dt class="text-sm font-medium text-gray-500">Contract</dt>
+                <dd class="text-sm text-gray-900"><%= Contract.name(@current_contract) %></dd>
+                
+                <dt class="text-sm font-medium text-gray-500">Dealer</dt>
+                <dd class="text-sm text-gray-900"><%= find_player_name(@game, @game.dealer_seat) %></dd>
+                
+                <dt class="text-sm font-medium text-gray-500">Game Phase</dt>
+                <dd class="text-sm text-gray-900"><%= String.capitalize(to_string(@game.phase)) %></dd>
+                
+                <dt class="text-sm font-medium text-gray-500">Deal</dt>
+                <dd class="text-sm text-gray-900"><%= @game.dealt_count %> / 28</dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+
+  <style>
+    .hearts, .diamonds {
+      color: #e53e3e;
+    }
+    .clubs, .spades {
+      color: #2d3748;
+    }
+  </style>
+</div>

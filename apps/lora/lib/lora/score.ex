@@ -154,9 +154,7 @@ defmodule Lora.Score do
     end)
   end
 
-  @doc """
-  Helper function to count cards that match a predicate.
-  """
+  @doc false
   @spec count_cards_by_predicate([Deck.card()], (Deck.card() -> boolean)) :: non_neg_integer
   defp count_cards_by_predicate(cards, predicate) do
     Enum.count(cards, predicate)

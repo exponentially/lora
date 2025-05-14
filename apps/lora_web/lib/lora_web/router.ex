@@ -8,6 +8,7 @@ defmodule LoraWeb.Router do
     plug :put_root_layout, html: {LoraWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug :ensure_player_id_generated
   end
 
   pipeline :api do
@@ -44,5 +45,20 @@ defmodule LoraWeb.Router do
       live_dashboard "/dashboard", metrics: LoraWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview
     end
+  end
+
+  # Ensure a player ID is generated and stored in the session
+  defp ensure_player_id_generated(conn, _opts) do
+    if get_session(conn, "player_id") do
+      conn
+    else
+      player_id = generate_player_id()
+      put_session(conn, "player_id", player_id)
+    end
+  end
+
+  # Generate a random player ID - used in both production and tests
+  defp generate_player_id do
+    :crypto.strong_rand_bytes(16) |> Base.encode16(case: :lower)
   end
 end

@@ -9,10 +9,6 @@
 # move said applications out of the umbrella.
 import Config
 
-# Configure Mix tasks and generators
-config :lora,
-  ecto_repos: [Lora.Repo]
-
 # Configures the mailer
 #
 # By default it uses the "Local" adapter which stores the emails
@@ -23,7 +19,6 @@ config :lora,
 config :lora, Lora.Mailer, adapter: Swoosh.Adapters.Local
 
 config :lora_web,
-  ecto_repos: [Lora.Repo],
   generators: [context_app: :lora]
 
 # Configures the endpoint

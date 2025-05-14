@@ -1,11 +1,13 @@
 defmodule LoraWeb.LobbyLive do
   use LoraWeb, :live_view
+
   require Logger
 
   @impl true
+  @spec mount(any(), map(), Phoenix.LiveView.Socket.t()) :: {:ok, map(), [{:temporary_assigns, [...]}, ...]}
   def mount(_params, session, socket) do
     # Generate a unique player ID if not already present in session
-    player_id = Map.get(session, "player_id", Lora.generate_player_id())
+    player_id = Map.fetch!(session, "player_id")
 
     socket =
       socket
@@ -19,7 +21,7 @@ defmodule LoraWeb.LobbyLive do
   end
 
   @impl true
-  def handle_event("create_game", %{"player" => %{"name" => name}}, socket) do
+  def handle_event("create_game", %{"create_player" => %{"name" => name}}, socket) do
     if valid_name?(name) do
       case Lora.create_game() do
         {:ok, game_id} ->
@@ -34,7 +36,7 @@ defmodule LoraWeb.LobbyLive do
   end
 
   @impl true
-  def handle_event("join_game", %{"player" => %{"name" => name, "game_code" => game_code}}, socket) do
+  def handle_event("join_game", %{"join_player" => %{"name" => name, "game_code" => game_code}}, socket) do
     game_code = String.trim(game_code)
 
     cond do
@@ -53,7 +55,16 @@ defmodule LoraWeb.LobbyLive do
   end
 
   @impl true
-  def handle_event("validate", %{"player" => params}, socket) do
+  def handle_event("validate", %{"create_player" => params}, socket) do
+    socket =
+      socket
+      |> assign(:player_name, Map.get(params, "name", ""))
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("validate", %{"join_player" => params}, socket) do
     socket =
       socket
       |> assign(:player_name, Map.get(params, "name", ""))
@@ -73,11 +84,11 @@ defmodule LoraWeb.LobbyLive do
   end
 
   defp redirect_to_game(socket, game_id, player_name) do
-    push_navigate(socket,
-      to: Routes.game_path(socket, :show, game_id),
-      replace: false,
-      # Pass player info as temporary flash to ensure it's available on the initial render
-      flash: %{"player_id" => socket.assigns.player_id, "player_name" => player_name}
-    )
+    socket =
+      socket
+      |> assign(:game_id, game_id)
+      |> assign(:player_name, player_name)
+
+    push_navigate(socket, to: ~p"/game/#{game_id}", replace: false )
   end
 end

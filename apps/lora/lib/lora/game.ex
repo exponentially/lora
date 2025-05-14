@@ -276,7 +276,7 @@ defmodule Lora.Game do
   Returns {next_player_seat, true} if found, or {nil, false} if no one can play.
   """
   @spec find_next_player_who_can_play(game_state(), map(), integer()) :: {integer() | nil, boolean()}
-  def find_next_player_who_can_play(state, hands, current_seat) do
+  def find_next_player_who_can_play(state, _hands, current_seat) do
     # Try each player in order
     Enum.reduce_while(1..4, {nil, false}, fn _, _ ->
       next_seat = next_seat(current_seat)
@@ -416,7 +416,7 @@ defmodule Lora.Game do
   Checks if the move is legal based on the current contract and game state.
   """
   @spec is_legal_move?(game_state(), integer(), Deck.card()) :: boolean()
-  def is_legal_move?(state, seat, card = {suit, rank}) do
+  def is_legal_move?(state, seat, {suit, rank}) do
     contract = Contract.at(state.contract_index)
     hand = state.hands[seat]
 

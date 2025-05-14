@@ -7,12 +7,7 @@ defmodule LoraWeb.ConnCase do
   import other functionality to make it easier
   to build common data structures and query the data layer.
 
-  Finally, if the test case interacts with the database,
-  we enable the SQL sandbox, so changes done to the database
-  are reverted at the end of every test. If you are using
-  PostgreSQL, you can even run database tests asynchronously
-  by setting `use LoraWeb.ConnCase, async: true`, although
-  this option is not recommended for other databases.
+  Note: This application does not use a database, as per NFR-P-02.
   """
 
   use ExUnit.CaseTemplate
@@ -31,8 +26,8 @@ defmodule LoraWeb.ConnCase do
     end
   end
 
-  setup tags do
-    Lora.DataCase.setup_sandbox(tags)
+  setup _tags do
+    # No database setup needed
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end
 end

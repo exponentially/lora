@@ -7,7 +7,7 @@ defmodule Lora.GameServer do
   use GenServer
   require Logger
 
-  alias Lora.{Game, Deck}
+  alias Lora.Game
   alias Phoenix.PubSub
 
   @reconnect_timeout 30_000  # 30 seconds
