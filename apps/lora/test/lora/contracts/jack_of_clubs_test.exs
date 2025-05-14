@@ -20,7 +20,8 @@ defmodule Lora.Contracts.JackOfClubsTest do
         1 => [{:clubs, :ace}, {:hearts, :queen}],
         2 => [{:diamonds, :king}, {:clubs, 7}],
         3 => [{:hearts, 8}, {:spades, :jack}],
-        4 => [{:spades, :ace}, {:clubs, :jack}]  # Player 4 has the Jack of Clubs
+        # Player 4 has the Jack of Clubs
+        4 => [{:spades, :ace}, {:clubs, :jack}]
       }
 
       game = %Game{
@@ -42,7 +43,7 @@ defmodule Lora.Contracts.JackOfClubsTest do
       # Given: Player 2 has both clubs and diamonds
       # When: The trick starts with a club
       game_with_trick = %{game | trick: [{1, {:clubs, :ace}}]}
-      
+
       # Then: Player 2 must play a club
       assert JackOfClubs.is_legal_move?(game_with_trick, 2, {:clubs, 7})
       refute JackOfClubs.is_legal_move?(game_with_trick, 2, {:diamonds, :king})
@@ -52,7 +53,7 @@ defmodule Lora.Contracts.JackOfClubsTest do
       # Given: Player 3 has no clubs
       # When: The trick starts with a club
       game_with_trick = %{game | trick: [{1, {:clubs, :ace}}]}
-      
+
       # Then: Player 3 can play any card
       assert JackOfClubs.is_legal_move?(game_with_trick, 3, {:hearts, 8})
       assert JackOfClubs.is_legal_move?(game_with_trick, 3, {:spades, :jack})
@@ -80,7 +81,7 @@ defmodule Lora.Contracts.JackOfClubsTest do
 
       # When: Player 1 plays a card
       {:ok, updated_game} = JackOfClubs.play_card(game, 1, {:clubs, :ace}, hands)
-      
+
       # Then: The trick should be updated and next player's turn
       assert [{1, {:clubs, :ace}}] = updated_game.trick
       assert updated_game.current_player == 2
@@ -107,14 +108,18 @@ defmodule Lora.Contracts.JackOfClubsTest do
 
       # When: Scores are calculated
       scores = JackOfClubs.calculate_scores(%Game{}, %{}, taken, 1)
-      
+
       # Then: Player 2 gets 8 points, others get 0
       assert scores == %{
-        1 => 0,  # No Jack of Clubs
-        2 => 8,  # Has Jack of Clubs
-        3 => 0,  # No Jack of Clubs
-        4 => 0   # No Jack of Clubs
-      }
+               # No Jack of Clubs
+               1 => 0,
+               # Has Jack of Clubs
+               2 => 8,
+               # No Jack of Clubs
+               3 => 0,
+               # No Jack of Clubs
+               4 => 0
+             }
     end
 
     test "handles the case when no one has taken the Jack of Clubs" do
@@ -136,14 +141,14 @@ defmodule Lora.Contracts.JackOfClubsTest do
 
       # When: Scores are calculated
       scores = JackOfClubs.calculate_scores(%Game{}, %{}, taken, 1)
-      
+
       # Then: Everyone gets 0 points
       assert scores == %{
-        1 => 0,
-        2 => 0,
-        3 => 0,
-        4 => 0
-      }
+               1 => 0,
+               2 => 0,
+               3 => 0,
+               4 => 0
+             }
     end
 
     test "handles empty taken piles" do
@@ -157,14 +162,14 @@ defmodule Lora.Contracts.JackOfClubsTest do
 
       # When: Scores are calculated
       scores = JackOfClubs.calculate_scores(%Game{}, %{}, taken, 1)
-      
+
       # Then: Everyone gets 0 points
       assert scores == %{
-        1 => 0,
-        2 => 0,
-        3 => 0,
-        4 => 0
-      }
+               1 => 0,
+               2 => 0,
+               3 => 0,
+               4 => 0
+             }
     end
 
     test "correctly processes nested trick structure" do
@@ -184,19 +189,24 @@ defmodule Lora.Contracts.JackOfClubsTest do
           # First trick with Jack of Clubs
           [{:clubs, :jack}, {:diamonds, 9}, {:hearts, 8}, {:spades, :jack}]
         ],
-        4 => []  # No tricks taken
+        # No tricks taken
+        4 => []
       }
-      
+
       # When: Scores are calculated
       scores = JackOfClubs.calculate_scores(%Game{}, %{}, taken, 1)
-      
+
       # Then: Player 3 gets 8 points, others get 0
       assert scores == %{
-        1 => 0,  # No Jack of Clubs
-        2 => 0,  # No Jack of Clubs
-        3 => 8,  # Has Jack of Clubs
-        4 => 0   # No Jack of Clubs
-      }
+               # No Jack of Clubs
+               1 => 0,
+               # No Jack of Clubs
+               2 => 0,
+               # Has Jack of Clubs
+               3 => 8,
+               # No Jack of Clubs
+               4 => 0
+             }
     end
 
     test "Jack of Clubs in the last trick" do
@@ -219,14 +229,15 @@ defmodule Lora.Contracts.JackOfClubsTest do
 
       # When: Scores are calculated with this as the last trick
       scores = JackOfClubs.calculate_scores(%Game{}, %{}, taken, 4)
-      
+
       # Then: Player 4 gets 8 points
       assert scores == %{
-        1 => 0,
-        2 => 0,
-        3 => 0,
-        4 => 8  # Has Jack of Clubs
-      }
+               1 => 0,
+               2 => 0,
+               3 => 0,
+               # Has Jack of Clubs
+               4 => 8
+             }
     end
   end
 
@@ -239,12 +250,13 @@ defmodule Lora.Contracts.JackOfClubsTest do
         taken: %{1 => [], 2 => [], 3 => [], 4 => []},
         contract_index: @jack_of_clubs_contract_index,
         dealer_seat: 1,
-        scores: %{1 => 10, 2 => 5, 3 => 8, 4 => 12}  # Existing scores
+        # Existing scores
+        scores: %{1 => 10, 2 => 5, 3 => 8, 4 => 12}
       }
 
       # All hands are empty at end of deal
       hands = %{1 => [], 2 => [], 3 => [], 4 => []}
-      
+
       # Player 3 has taken the Jack of Clubs
       taken = %{
         1 => [[{:hearts, :ace}, {:diamonds, :king}, {:clubs, :queen}, {:spades, :jack}]],
@@ -255,17 +267,21 @@ defmodule Lora.Contracts.JackOfClubsTest do
 
       # When: Deal is over
       updated_game = JackOfClubs.handle_deal_over(game, hands, taken, 1)
-      
+
       # Then: Scores should reflect Jack of Clubs scoring
       expected_scores = %{
-        1 => 10,  # No change (10 + 0)
-        2 => 5,   # No change (5 + 0)
-        3 => 16,  # 8 + 8 (Jack of Clubs)
-        4 => 12   # No change (12 + 0)
+        # No change (10 + 0)
+        1 => 10,
+        # No change (5 + 0)
+        2 => 5,
+        # 8 + 8 (Jack of Clubs)
+        3 => 16,
+        # No change (12 + 0)
+        4 => 12
       }
-      
+
       assert updated_game.scores == expected_scores
-      
+
       # Game state should be updated
       assert is_map(updated_game)
       assert updated_game.scores != game.scores
@@ -279,7 +295,7 @@ defmodule Lora.Contracts.JackOfClubsTest do
         id: "test_game",
         contract_index: @jack_of_clubs_contract_index
       }
-      
+
       # When/Then: No player can pass
       for seat <- 1..4 do
         refute JackOfClubs.can_pass?(game, seat)
@@ -294,7 +310,7 @@ defmodule Lora.Contracts.JackOfClubsTest do
         id: "test_game",
         contract_index: @jack_of_clubs_contract_index
       }
-      
+
       # When/Then: Attempting to pass returns an error
       assert {:error, "Cannot pass in the Jack of Clubs contract"} = JackOfClubs.pass(game, 1)
     end
@@ -308,26 +324,30 @@ defmodule Lora.Contracts.JackOfClubsTest do
         players: @players,
         contract_index: @jack_of_clubs_contract_index,
         trick: [
-          {1, {:clubs, :ace}},    # Player 1 leads with Ace of Clubs
-          {2, {:clubs, 10}},      # Player 2 follows with lower club
-          {3, {:clubs, 7}},       # Player 3 follows with lower club
+          # Player 1 leads with Ace of Clubs
+          {1, {:clubs, :ace}},
+          # Player 2 follows with lower club
+          {2, {:clubs, 10}},
+          # Player 3 follows with lower club
+          {3, {:clubs, 7}}
           # Player 4 will play Jack of Clubs
         ],
         hands: %{
           1 => [{:hearts, :king}],
           2 => [{:diamonds, 9}],
           3 => [{:spades, 10}],
-          4 => [{:clubs, :jack}]  # Jack of Clubs
+          # Jack of Clubs
+          4 => [{:clubs, :jack}]
         },
         taken: %{1 => [], 2 => [], 3 => [], 4 => []}
       }
-      
+
       # When: Player 4 plays Jack of Clubs and the trick completes
       {:ok, updated_game} = JackOfClubs.play_card(game, 4, {:clubs, :jack}, game.hands)
-      
+
       # Then: Player 1 should win the trick because Ace > Jack
       assert updated_game.taken[1] != []
-      
+
       # And the Jack of Clubs should be in Player 1's taken pile
       taken_cards = List.flatten(updated_game.taken[1])
       assert Enum.any?(taken_cards, fn card -> card == {:clubs, :jack} end)

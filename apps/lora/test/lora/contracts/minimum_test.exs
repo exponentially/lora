@@ -42,7 +42,7 @@ defmodule Lora.Contracts.MinimumTest do
       # Given: Player 2 has both clubs and diamonds
       # When: The trick starts with a club
       game_with_trick = %{game | trick: [{1, {:clubs, :ace}}]}
-      
+
       # Then: Player 2 must play a club
       assert Minimum.is_legal_move?(game_with_trick, 2, {:clubs, 7})
       refute Minimum.is_legal_move?(game_with_trick, 2, {:diamonds, :king})
@@ -52,7 +52,7 @@ defmodule Lora.Contracts.MinimumTest do
       # Given: Player 3 has no clubs
       # When: The trick starts with a club
       game_with_trick = %{game | trick: [{1, {:clubs, :ace}}]}
-      
+
       # Then: Player 3 can play any card
       assert Minimum.is_legal_move?(game_with_trick, 3, {:hearts, 8})
       assert Minimum.is_legal_move?(game_with_trick, 3, {:spades, :jack})
@@ -80,7 +80,7 @@ defmodule Lora.Contracts.MinimumTest do
 
       # When: Player 1 plays a card
       {:ok, updated_game} = Minimum.play_card(game, 1, {:clubs, :ace}, hands)
-      
+
       # Then: The trick should be updated and next player's turn
       assert [{1, {:clubs, :ace}}] = updated_game.trick
       assert updated_game.current_player == 2
@@ -115,14 +115,18 @@ defmodule Lora.Contracts.MinimumTest do
 
       # When: Scores are calculated
       scores = Minimum.calculate_scores(%Game{}, %{}, taken, 1)
-      
+
       # Then: Each player gets +1 point per trick taken
       assert scores == %{
-        1 => 3,  # 3 tricks
-        2 => 2,  # 2 tricks
-        3 => 1,  # 1 trick
-        4 => 2   # 2 tricks
-      }
+               # 3 tricks
+               1 => 3,
+               # 2 tricks
+               2 => 2,
+               # 1 trick
+               3 => 1,
+               # 2 tricks
+               4 => 2
+             }
     end
 
     test "handles empty taken piles" do
@@ -136,14 +140,14 @@ defmodule Lora.Contracts.MinimumTest do
 
       # When: Scores are calculated
       scores = Minimum.calculate_scores(%Game{}, %{}, taken, 1)
-      
+
       # Then: Everyone gets 0 points
       assert scores == %{
-        1 => 0,
-        2 => 0,
-        3 => 0,
-        4 => 0
-      }
+               1 => 0,
+               2 => 0,
+               3 => 0,
+               4 => 0
+             }
     end
 
     test "handles uneven trick distribution" do
@@ -166,14 +170,18 @@ defmodule Lora.Contracts.MinimumTest do
 
       # When: Scores are calculated
       scores = Minimum.calculate_scores(%Game{}, %{}, taken, 1)
-      
+
       # Then: Player 1 gets 8 points, others get 0
       assert scores == %{
-        1 => 8,  # 8 tricks
-        2 => 0,  # 0 tricks
-        3 => 0,  # 0 tricks
-        4 => 0   # 0 tricks
-      }
+               # 8 tricks
+               1 => 8,
+               # 0 tricks
+               2 => 0,
+               # 0 tricks
+               3 => 0,
+               # 0 tricks
+               4 => 0
+             }
     end
   end
 
@@ -186,12 +194,13 @@ defmodule Lora.Contracts.MinimumTest do
         taken: %{1 => [], 2 => [], 3 => [], 4 => []},
         contract_index: @minimum_contract_index,
         dealer_seat: 1,
-        scores: %{1 => 10, 2 => 5, 3 => 8, 4 => 12}  # Existing scores
+        # Existing scores
+        scores: %{1 => 10, 2 => 5, 3 => 8, 4 => 12}
       }
 
       # All hands are empty at end of deal
       hands = %{1 => [], 2 => [], 3 => [], 4 => []}
-      
+
       # Each player has taken different numbers of tricks
       taken = %{
         1 => [
@@ -214,17 +223,21 @@ defmodule Lora.Contracts.MinimumTest do
 
       # When: Deal is over
       updated_game = Minimum.handle_deal_over(game, hands, taken, 1)
-      
+
       # Then: Scores should reflect Minimum scoring (+1 per trick)
       expected_scores = %{
-        1 => 12,  # 10 + 2
-        2 => 7,   # 5 + 2
-        3 => 10,  # 8 + 2
-        4 => 14   # 12 + 2
+        # 10 + 2
+        1 => 12,
+        # 5 + 2
+        2 => 7,
+        # 8 + 2
+        3 => 10,
+        # 12 + 2
+        4 => 14
       }
-      
+
       assert updated_game.scores == expected_scores
-      
+
       # Game state should be updated
       assert is_map(updated_game)
       assert updated_game.scores != game.scores
@@ -238,7 +251,7 @@ defmodule Lora.Contracts.MinimumTest do
         id: "test_game",
         contract_index: @minimum_contract_index
       }
-      
+
       # When/Then: No player can pass
       for seat <- 1..4 do
         refute Minimum.can_pass?(game, seat)
@@ -253,7 +266,7 @@ defmodule Lora.Contracts.MinimumTest do
         id: "test_game",
         contract_index: @minimum_contract_index
       }
-      
+
       # When/Then: Attempting to pass returns an error
       assert {:error, "Cannot pass in the Minimum contract"} = Minimum.pass(game, 1)
     end
@@ -267,27 +280,32 @@ defmodule Lora.Contracts.MinimumTest do
         players: @players,
         contract_index: @minimum_contract_index,
         trick: [
-          {1, {:diamonds, 10}},    # Player 1 leads diamonds
-          {2, {:diamonds, :king}}, # Player 2 plays higher diamond
-          {3, {:diamonds, 7}}      # Player 3 plays lower diamond
+          # Player 1 leads diamonds
+          {1, {:diamonds, 10}},
+          # Player 2 plays higher diamond
+          {2, {:diamonds, :king}},
+          # Player 3 plays lower diamond
+          {3, {:diamonds, 7}}
         ],
         current_player: 4,
         hands: %{
           1 => [{:clubs, :ace}],
           2 => [{:hearts, 9}],
           3 => [{:spades, 10}],
-          4 => [{:diamonds, :ace}] # Player 4 has the highest diamond
+          # Player 4 has the highest diamond
+          4 => [{:diamonds, :ace}]
         },
         taken: %{1 => [], 2 => [], 3 => [], 4 => []}
       }
-      
+
       # When: Player 4 plays the Ace of Diamonds
       {:ok, updated_game} = Minimum.play_card(game, 4, {:diamonds, :ace}, game.hands)
-      
+
       # Then: Player 4 should win the trick because Ace is highest
       assert updated_game.taken[4] != []
-      assert updated_game.current_player == 4 # Winner leads next trick
-      
+      # Winner leads next trick
+      assert updated_game.current_player == 4
+
       # And the trick should be in Player 4's taken pile
       trick_cards = List.flatten(updated_game.taken[4])
       assert Enum.member?(trick_cards, {:diamonds, 10})
@@ -295,7 +313,7 @@ defmodule Lora.Contracts.MinimumTest do
       assert Enum.member?(trick_cards, {:diamonds, 7})
       assert Enum.member?(trick_cards, {:diamonds, :ace})
     end
-    
+
     test "off-suit plays follow trick-taking rules" do
       # Given: A game where two players can't follow suit
       game = %Game{
@@ -303,30 +321,35 @@ defmodule Lora.Contracts.MinimumTest do
         players: @players,
         contract_index: @minimum_contract_index,
         trick: [
-          {1, {:clubs, :ace}},    # Player 1 leads with club
-          {2, {:clubs, 7}}        # Player 2 follows with club
+          # Player 1 leads with club
+          {1, {:clubs, :ace}},
+          # Player 2 follows with club
+          {2, {:clubs, 7}}
         ],
         current_player: 3,
         hands: %{
           1 => [{:diamonds, 10}],
           2 => [{:diamonds, :king}],
-          3 => [{:hearts, 8}, {:spades, :jack}], # Player 3 has no clubs
-          4 => [{:hearts, :king}, {:spades, :ace}] # Player 4 has no clubs
+          # Player 3 has no clubs
+          3 => [{:hearts, 8}, {:spades, :jack}],
+          # Player 4 has no clubs
+          4 => [{:hearts, :king}, {:spades, :ace}]
         },
         taken: %{1 => [], 2 => [], 3 => [], 4 => []}
       }
-      
+
       # When: Player 3 and 4 play off-suit cards
       {:ok, game} = Minimum.play_card(game, 3, {:hearts, 8}, game.hands)
       hands = Map.put(game.hands, 3, [{:spades, :jack}])
       game = %{game | hands: hands}
-      
+
       {:ok, updated_game} = Minimum.play_card(game, 4, {:spades, :ace}, game.hands)
-      
+
       # Then: Player 1 should still win the trick (since they led the suit)
       assert updated_game.taken[1] != []
-      assert updated_game.current_player == 1 # Winner leads next trick
-      
+      # Winner leads next trick
+      assert updated_game.current_player == 1
+
       # And the trick should contain all played cards
       trick_cards = List.flatten(updated_game.taken[1])
       assert Enum.member?(trick_cards, {:clubs, :ace})
