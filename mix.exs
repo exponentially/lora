@@ -8,7 +8,8 @@ defmodule Lora.Umbrella.MixProject do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       aliases: aliases(),
-      extra_applications: [:logger]
+      extra_applications: [:logger],
+      test_coverage: [tool: ExCoveralls],
     ]
   end
 

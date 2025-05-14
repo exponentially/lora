@@ -13,7 +13,15 @@ defmodule Lora.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+      test_coverage: [tool: ExCoveralls],
+      preferred_cli_env: [
+        coveralls: :test,
+        "coveralls.detail": :test,
+        "coveralls.post": :test,
+        "coveralls.html": :test,
+        "coveralls.cobertura": :test
+      ]
     ]
   end
 
@@ -37,6 +45,7 @@ defmodule Lora.MixProject do
   defp deps do
     [
       {:dns_cluster, "~> 0.1.1"},
+      {:excoveralls, "~> 0.18", only: :test},
       {:phoenix_pubsub, "~> 2.1"},
       {:jason, "~> 1.2"},
       {:swoosh, "~> 1.5"},
