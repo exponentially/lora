@@ -56,8 +56,9 @@ defmodule LoraWeb.GameLive do
 
   @impl true
   def handle_event("play_card", %{"suit" => suit, "rank" => rank}, socket) do
-    game_id = socket.assigns.game_id
-    player_id = socket.assigns.player_id
+    # Access the game ID from socket.assigns.game.id instead of game_id
+    game_id = socket.assigns.game.id
+    player_id = socket.assigns.player.id
 
     # Convert the string values to atoms/integers for the card
     suit = String.to_existing_atom(suit)
@@ -66,9 +67,11 @@ defmodule LoraWeb.GameLive do
 
     case Lora.play_card(game_id, player_id, card) do
       {:ok, _updated_game} ->
+        Logger.debug("Card played successfully: #{inspect(card)}")
         {:noreply, socket}
 
       {:error, reason} ->
+        Logger.error("Error playing card: #{reason}")  # Log the error reason
         # Use put_flash from Phoenix.LiveView
         {:noreply, Phoenix.LiveView.put_flash(socket, :error, reason)}
     end
@@ -76,8 +79,9 @@ defmodule LoraWeb.GameLive do
 
   @impl true
   def handle_event("pass", _params, socket) do
-    game_id = socket.assigns.game_id
-    player_id = socket.assigns.player_id
+    # Access the game ID and player ID from the nested structure
+    game_id = socket.assigns.game.id
+    player_id = socket.assigns.player.id
 
     case Lora.pass_lora(game_id, player_id) do
       {:ok, _updated_game} ->
@@ -91,9 +95,25 @@ defmodule LoraWeb.GameLive do
 
   @impl true
   def handle_info({:game_state, game}, socket) do
-    player_id = Map.get(socket.assigns, :player_id)
-    socket = assign_game_state(socket, game, player_id)
-    {:noreply, socket}
+    # Use more robust player ID retrieval that works in both initial and connected states
+    player_id = cond do
+      # If we have player object in assigns, get ID from there
+      Map.has_key?(socket.assigns, :player) && is_map(socket.assigns.player) ->
+        socket.assigns.player.id
+      # Fallback to direct player_id in assigns
+      Map.has_key?(socket.assigns, :player_id) ->
+        socket.assigns.player_id
+      true ->
+        nil
+    end
+
+    if player_id do
+      socket = assign_game_state(socket, game, player_id)
+      {:noreply, socket}
+    else
+      Logger.error("Player ID not found in socket assigns during game update")
+      {:noreply, socket}
+    end
   end
 
   @impl true
@@ -105,9 +125,18 @@ defmodule LoraWeb.GameLive do
 
   @impl true
   def terminate(_reason, socket) do
-    if connected?(socket) and Map.has_key?(socket.assigns, :game_id) and Map.has_key?(socket.assigns, :player_id) do
-      # Only disconnect from game if we have valid game_id and player_id
-      Lora.player_disconnect(socket.assigns.game_id, socket.assigns.player_id)
+    # Use more robust checking to account for different states of the socket assigns
+    cond do
+      # First check if we have game and player directly in the assigns structure
+      connected?(socket) and Map.has_key?(socket.assigns, :game) and is_map(socket.assigns.game) and
+      Map.has_key?(socket.assigns, :player) and is_map(socket.assigns.player) ->
+        Lora.player_disconnect(socket.assigns.game.id, socket.assigns.player.id)
+
+      # Fallback to the original approach for backward compatibility
+      connected?(socket) and Map.has_key?(socket.assigns, :game_id) and Map.has_key?(socket.assigns, :player_id) ->
+        Lora.player_disconnect(socket.assigns.game_id, socket.assigns.player_id)
+
+      true -> :ok
     end
 
     :ok
