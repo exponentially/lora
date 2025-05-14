@@ -23,12 +23,13 @@ defmodule LoraWeb.GameLiveTest do
 
     # Mock Lora module functions
     with_mocks([
-      {Lora, [], [
-        get_game_state: fn _id -> {:ok, mock_game_state} end,
-        add_player: fn _game_id, _player_id, _player_name -> {:ok, mock_game_state} end,
-        player_reconnect: fn _game_id, _player_id, _pid -> :ok end,
-        legal_moves: fn _game_id, _player_id -> {:ok, []} end
-      ]}
+      {Lora, [],
+       [
+         get_game_state: fn _id -> {:ok, mock_game_state} end,
+         add_player: fn _game_id, _player_id, _player_name -> {:ok, mock_game_state} end,
+         player_reconnect: fn _game_id, _player_id, _pid -> :ok end,
+         legal_moves: fn _game_id, _player_id -> {:ok, []} end
+       ]}
     ]) do
       # This is a clean conn with no session data
       conn = Phoenix.ConnTest.build_conn()

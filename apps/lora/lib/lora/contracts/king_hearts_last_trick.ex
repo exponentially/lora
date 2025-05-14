@@ -7,7 +7,7 @@ defmodule Lora.Contracts.KingHeartsLastTrick do
 
   @behaviour Lora.Contracts.ContractBehaviour
 
-  alias Lora.{Game, Score}
+  alias Lora.Score
   alias Lora.Contracts.TrickTaking
 
   @impl true

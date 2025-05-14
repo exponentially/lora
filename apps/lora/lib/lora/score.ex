@@ -63,6 +63,7 @@ defmodule Lora.Score do
         Map.new(taken, fn {s, _} ->
           if s == seat, do: {s, -8}, else: {s, 0}
         end)
+
       nil ->
         hearts_count_by_seat
     end
@@ -85,6 +86,7 @@ defmodule Lora.Score do
         Map.new(taken, fn {s, _} ->
           if s == seat, do: {s, 8}, else: {s, 0}
         end)
+
       nil ->
         Map.new(taken, fn {s, _} -> {s, 0} end)
     end
@@ -96,7 +98,9 @@ defmodule Lora.Score do
   +4 points for the player who takes the last trick.
   +8 bonus points if a player takes both in the same trick.
   """
-  @spec king_hearts_last_trick(%{pos_integer => [Deck.card()]}, integer) :: %{pos_integer => integer}
+  @spec king_hearts_last_trick(%{pos_integer => [Deck.card()]}, integer) :: %{
+          pos_integer => integer
+        }
   def king_hearts_last_trick(taken, last_trick_winner) do
     # Find who has the king of hearts
     king_winner =
@@ -126,6 +130,7 @@ defmodule Lora.Score do
           # Moved the condition outside the guard clause
           if seat == last_trick_winner do
             taken_cards = Map.get(taken, seat)
+
             if is_list(taken_cards) and length(taken_cards) > 0 do
               last_trick = List.last(taken_cards)
               is_list(last_trick) && Enum.any?(last_trick, &Deck.is_king_of_hearts?/1)
@@ -135,7 +140,9 @@ defmodule Lora.Score do
           else
             false
           end
-        _ -> false
+
+        _ ->
+          false
       end
 
     # Add bonus if applicable
@@ -175,7 +182,9 @@ defmodule Lora.Score do
   @doc """
   Update the cumulative scores with the scores from the current contract.
   """
-  @spec update_cumulative_scores(%{pos_integer => integer}, %{pos_integer => integer}) :: %{pos_integer => integer}
+  @spec update_cumulative_scores(%{pos_integer => integer}, %{pos_integer => integer}) :: %{
+          pos_integer => integer
+        }
   def update_cumulative_scores(cumulative, current) do
     Map.merge(cumulative, current, fn _k, v1, v2 -> v1 + v2 end)
   end

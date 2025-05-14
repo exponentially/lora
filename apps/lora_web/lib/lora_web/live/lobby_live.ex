@@ -4,7 +4,8 @@ defmodule LoraWeb.LobbyLive do
   require Logger
 
   @impl true
-  @spec mount(any(), map(), Phoenix.LiveView.Socket.t()) :: {:ok, map(), [{:temporary_assigns, [...]}, ...]}
+  @spec mount(any(), map(), Phoenix.LiveView.Socket.t()) ::
+          {:ok, map(), [{:temporary_assigns, [...]}, ...]}
   def mount(_params, session, socket) do
     # Generate a unique player ID if not already present in session
     player_id = Map.fetch!(session, "player_id")
@@ -24,6 +25,7 @@ defmodule LoraWeb.LobbyLive do
   def handle_event("create_game", %{"create_player" => %{"name" => name}}, socket) do
     if valid_name?(name) do
       player_id = socket.assigns.player_id
+
       case Lora.create_game(player_id, name) do
         {:ok, game_id} ->
           {:noreply, redirect_to_game(socket, game_id, name)}
@@ -37,7 +39,11 @@ defmodule LoraWeb.LobbyLive do
   end
 
   @impl true
-  def handle_event("join_game", %{"join_player" => %{"name" => name, "game_code" => game_code}}, socket) do
+  def handle_event(
+        "join_game",
+        %{"join_player" => %{"name" => name, "game_code" => game_code}},
+        socket
+      ) do
     game_code = String.trim(game_code)
     player_id = socket.assigns.player_id
 
@@ -55,6 +61,7 @@ defmodule LoraWeb.LobbyLive do
         case Lora.join_game(game_code, player_id, name) do
           {:ok, _game} ->
             {:noreply, redirect_to_game(socket, game_code, name)}
+
           {:error, reason} ->
             {:noreply, assign(socket, error_message: reason)}
         end
@@ -96,6 +103,6 @@ defmodule LoraWeb.LobbyLive do
       |> assign(:game_id, game_id)
       |> assign(:player_name, player_name)
 
-    push_navigate(socket, to: ~p"/game/#{game_id}", replace: false )
+    push_navigate(socket, to: ~p"/game/#{game_id}", replace: false)
   end
 end

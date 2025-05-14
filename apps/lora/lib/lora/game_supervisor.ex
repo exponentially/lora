@@ -32,7 +32,9 @@ defmodule Lora.GameSupervisor do
           {:ok, _game} -> {:ok, game_id}
           error -> error
         end
-      error -> error
+
+      error ->
+        error
     end
   end
 
@@ -49,7 +51,9 @@ defmodule Lora.GameSupervisor do
           {:ok, _game} -> {:ok, game_id}
           error -> error
         end
-      error -> error
+
+      error ->
+        error
     end
   end
 
@@ -67,6 +71,7 @@ defmodule Lora.GameSupervisor do
     case Registry.lookup(Lora.GameRegistry, game_id) do
       [{pid, _}] ->
         DynamicSupervisor.terminate_child(__MODULE__, pid)
+
       [] ->
         {:error, :not_found}
     end
@@ -89,6 +94,8 @@ defmodule Lora.GameSupervisor do
     characters = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 
     1..6
-    |> Enum.map_join("", fn _ -> String.at(characters, :rand.uniform(String.length(characters)) - 1) end)
+    |> Enum.map_join("", fn _ ->
+      String.at(characters, :rand.uniform(String.length(characters)) - 1)
+    end)
   end
 end

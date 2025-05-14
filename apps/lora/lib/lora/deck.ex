@@ -71,10 +71,14 @@ defmodule Lora.Deck do
     [{first_seat, {led_suit, _}} | _] = trick
 
     {winner_seat, _} =
-      Enum.reduce(trick, {first_seat, -1}, fn {seat, {suit, rank}}, {current_winner, highest_value} ->
+      Enum.reduce(trick, {first_seat, -1}, fn {seat, {suit, rank}},
+                                              {current_winner, highest_value} ->
         if suit == led_suit do
           rank_value = rank_value(rank)
-          if rank_value > highest_value, do: {seat, rank_value}, else: {current_winner, highest_value}
+
+          if rank_value > highest_value,
+            do: {seat, rank_value},
+            else: {current_winner, highest_value}
         else
           {current_winner, highest_value}
         end

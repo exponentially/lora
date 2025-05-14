@@ -3,9 +3,24 @@ defmodule Lora.Contract do
   Defines the seven contracts of the Lora card game and their scoring rules.
   """
 
-  @type t :: :minimum | :maximum | :queens | :hearts | :jack_of_clubs | :king_hearts_last_trick | :lora
+  @type t ::
+          :minimum
+          | :maximum
+          | :queens
+          | :hearts
+          | :jack_of_clubs
+          | :king_hearts_last_trick
+          | :lora
 
-  @contracts [:minimum, :maximum, :queens, :hearts, :jack_of_clubs, :king_hearts_last_trick, :lora]
+  @contracts [
+    :minimum,
+    :maximum,
+    :queens,
+    :hearts,
+    :jack_of_clubs,
+    :king_hearts_last_trick,
+    :lora
+  ]
 
   @doc """
   Returns all available contracts in their fixed order.
@@ -40,10 +55,19 @@ defmodule Lora.Contract do
   def description(:minimum), do: "Plus one point per trick taken"
   def description(:maximum), do: "Minus one point per trick taken"
   def description(:queens), do: "Plus two points per queen taken"
-  def description(:hearts), do: "Plus one point per heart taken; minus eight if one player takes all hearts"
+
+  def description(:hearts),
+    do: "Plus one point per heart taken; minus eight if one player takes all hearts"
+
   def description(:jack_of_clubs), do: "Plus eight points to the player who takes it"
-  def description(:king_hearts_last_trick), do: "Plus four points each for King of Hearts and Last Trick; plus eight if captured in the same trick"
-  def description(:lora), do: "Minus eight to the first player who empties hand; all others receive plus one point per remaining card"
+
+  def description(:king_hearts_last_trick),
+    do:
+      "Plus four points each for King of Hearts and Last Trick; plus eight if captured in the same trick"
+
+  def description(:lora),
+    do:
+      "Minus eight to the first player who empties hand; all others receive plus one point per remaining card"
 
   @doc """
   Returns whether the contract is a trick-taking contract or Lora.

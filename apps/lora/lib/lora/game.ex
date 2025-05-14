@@ -4,14 +4,14 @@ defmodule Lora.Game do
   checking legal moves, and processing game state.
   """
 
-  alias Lora.{Deck, Contract, Score}
+  alias Lora.{Deck, Contract}
   alias Lora.Contracts.TrickTaking
 
   @type player :: %{
-    id: binary(),
-    name: binary(),
-    seat: integer()
-  }
+          id: binary(),
+          name: binary(),
+          seat: integer()
+        }
 
   defstruct [
     :id,
@@ -29,19 +29,19 @@ defmodule Lora.Game do
   ]
 
   @type t :: %__MODULE__{
-    id: binary(),
-    players: [player()],
-    dealer_seat: integer(),
-    contract_index: integer(),
-    hands: %{integer() => [Deck.card()]},
-    trick: [{integer(), Deck.card()}],
-    taken: %{integer() => [[Deck.card()]]},
-    lora_layout: %{Deck.suit() => [Deck.card()]},
-    scores: %{integer() => integer()},
-    phase: :lobby | :playing | :finished,
-    current_player: integer() | nil,
-    dealt_count: integer()
-  }
+          id: binary(),
+          players: [player()],
+          dealer_seat: integer(),
+          contract_index: integer(),
+          hands: %{integer() => [Deck.card()]},
+          trick: [{integer(), Deck.card()}],
+          taken: %{integer() => [[Deck.card()]]},
+          lora_layout: %{Deck.suit() => [Deck.card()]},
+          scores: %{integer() => integer()},
+          phase: :lobby | :playing | :finished,
+          current_player: integer() | nil,
+          dealt_count: integer()
+        }
 
   @doc """
   Creates a new game with the given ID.
@@ -100,14 +100,13 @@ defmodule Lora.Game do
   @spec start_game(t()) :: t()
   def start_game(state) do
     # First dealer is seat 1
-    deal_new_contract(
-      %{state |
-        phase: :playing,
+    deal_new_contract(%{
+      state
+      | phase: :playing,
         dealer_seat: 1,
         contract_index: 0,
         dealt_count: 0
-      }
-    )
+    })
   end
 
   @doc """
@@ -124,13 +123,14 @@ defmodule Lora.Game do
     # The player to the right of the dealer leads
     first_player = next_seat(state.dealer_seat)
 
-    %{state |
-      hands: hands,
-      trick: [],
-      taken: %{1 => [], 2 => [], 3 => [], 4 => []},
-      lora_layout: %{clubs: [], diamonds: [], hearts: [], spades: []},
-      current_player: first_player,
-      dealt_count: state.dealt_count + 1
+    %{
+      state
+      | hands: hands,
+        trick: [],
+        taken: %{1 => [], 2 => [], 3 => [], 4 => []},
+        lora_layout: %{clubs: [], diamonds: [], hearts: [], spades: []},
+        current_player: first_player,
+        dealt_count: state.dealt_count + 1
     }
   end
 
@@ -155,9 +155,10 @@ defmodule Lora.Game do
 
       true ->
         # Remove the card from the player's hand
-        hands = Map.update!(state.hands, seat, fn hand ->
-          hand -- [card]
-        end)
+        hands =
+          Map.update!(state.hands, seat, fn hand ->
+            hand -- [card]
+          end)
 
         # Get the appropriate contract module and delegate to it
         contract = Contract.at(state.contract_index)

@@ -7,7 +7,7 @@ defmodule LoraWeb.GameLive do
 
   @impl true
   def mount(%{"id" => game_id}, session, socket) do
-    player_id =  Map.fetch!(session, "player_id")
+    player_id = Map.fetch!(session, "player_id")
     player_name = session["player_name"] || player_id
 
     if is_nil(player_id) do
@@ -71,7 +71,8 @@ defmodule LoraWeb.GameLive do
         {:noreply, socket}
 
       {:error, reason} ->
-        Logger.error("Error playing card: #{reason}")  # Log the error reason
+        # Log the error reason
+        Logger.error("Error playing card: #{reason}")
         # Use put_flash from Phoenix.LiveView
         {:noreply, Phoenix.LiveView.put_flash(socket, :error, reason)}
     end
@@ -96,16 +97,19 @@ defmodule LoraWeb.GameLive do
   @impl true
   def handle_info({:game_state, game}, socket) do
     # Use more robust player ID retrieval that works in both initial and connected states
-    player_id = cond do
-      # If we have player object in assigns, get ID from there
-      Map.has_key?(socket.assigns, :player) && is_map(socket.assigns.player) ->
-        socket.assigns.player.id
-      # Fallback to direct player_id in assigns
-      Map.has_key?(socket.assigns, :player_id) ->
-        socket.assigns.player_id
-      true ->
-        nil
-    end
+    player_id =
+      cond do
+        # If we have player object in assigns, get ID from there
+        Map.has_key?(socket.assigns, :player) && is_map(socket.assigns.player) ->
+          socket.assigns.player.id
+
+        # Fallback to direct player_id in assigns
+        Map.has_key?(socket.assigns, :player_id) ->
+          socket.assigns.player_id
+
+        true ->
+          nil
+      end
 
     if player_id do
       socket = assign_game_state(socket, game, player_id)
@@ -117,7 +121,17 @@ defmodule LoraWeb.GameLive do
   end
 
   @impl true
-  def handle_info({event_type, _payload}, socket) when event_type in [:card_played, :player_passed, :player_joined, :player_disconnected, :player_reconnected, :game_started, :game_over, :player_timeout] do
+  def handle_info({event_type, _payload}, socket)
+      when event_type in [
+             :card_played,
+             :player_passed,
+             :player_joined,
+             :player_disconnected,
+             :player_reconnected,
+             :game_started,
+             :game_over,
+             :player_timeout
+           ] do
     # Handle various game events if needed
     # For now, these events are just for information and don't require specific handling
     {:noreply, socket}
@@ -129,14 +143,16 @@ defmodule LoraWeb.GameLive do
     cond do
       # First check if we have game and player directly in the assigns structure
       connected?(socket) and Map.has_key?(socket.assigns, :game) and is_map(socket.assigns.game) and
-      Map.has_key?(socket.assigns, :player) and is_map(socket.assigns.player) ->
+        Map.has_key?(socket.assigns, :player) and is_map(socket.assigns.player) ->
         Lora.player_disconnect(socket.assigns.game.id, socket.assigns.player.id)
 
       # Fallback to the original approach for backward compatibility
-      connected?(socket) and Map.has_key?(socket.assigns, :game_id) and Map.has_key?(socket.assigns, :player_id) ->
+      connected?(socket) and Map.has_key?(socket.assigns, :game_id) and
+          Map.has_key?(socket.assigns, :player_id) ->
         Lora.player_disconnect(socket.assigns.game_id, socket.assigns.player_id)
 
-      true -> :ok
+      true ->
+        :ok
     end
 
     :ok
@@ -157,6 +173,7 @@ defmodule LoraWeb.GameLive do
   end
 
   defp get_legal_moves(_game, nil), do: []
+
   defp get_legal_moves(game, player) do
     if game.phase == :playing and game.current_player == player.seat do
       {:ok, legal_cards} = Lora.legal_moves(game.id, player.id)
@@ -213,8 +230,10 @@ defmodule LoraWeb.GameLive do
     end
   end
 
-  def suit_color(suit) when suit in [:hearts, :diamonds], do: "hearts"  # red
-  def suit_color(suit) when suit in [:clubs, :spades], do: "clubs"  # black
+  # red
+  def suit_color(suit) when suit in [:hearts, :diamonds], do: "hearts"
+  # black
+  def suit_color(suit) when suit in [:clubs, :spades], do: "clubs"
 
   def find_winner(scores) do
     {winning_seat, _} = Enum.max_by(scores, fn {_seat, score} -> score end)

@@ -11,7 +11,8 @@ defmodule LoraWeb.LobbyLiveTest do
     {:ok, view, _html} = live(conn, "/")
 
     # Submit form with empty player name
-    html = view
+    html =
+      view
       |> element("#create-game-form")
       |> render_submit(%{create_player: %{name: ""}})
 
@@ -25,7 +26,8 @@ defmodule LoraWeb.LobbyLiveTest do
     {:ok, view, _html} = live(conn, "/")
 
     # Submit form with empty player name
-    html = view
+    html =
+      view
       |> element("#join-game-form")
       |> render_submit(%{join_player: %{name: "", game_code: game_id}})
 
@@ -39,7 +41,8 @@ defmodule LoraWeb.LobbyLiveTest do
     {:ok, view, _html} = live(conn, "/")
 
     # Submit form with empty game ID
-    html = view
+    html =
+      view
       |> element("#join-game-form")
       |> render_submit(%{join_player: %{name: player_name, game_code: ""}})
 

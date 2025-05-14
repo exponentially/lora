@@ -23,7 +23,7 @@ defmodule LoraWeb.MixProject do
   def application do
     [
       mod: {LoraWeb.Application, []},
-      extra_applications: [:logger, :runtime_tools],
+      extra_applications: [:logger, :runtime_tools]
     ]
   end
 
@@ -53,6 +53,7 @@ defmodule LoraWeb.MixProject do
        depth: 1},
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
+      {:tidewave, "~> 0.1", only: :dev},
       {:gettext, "~> 0.26"},
       {:lora, in_umbrella: true},
       {:jason, "~> 1.2"},

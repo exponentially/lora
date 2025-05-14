@@ -1,39 +1,84 @@
 <div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-md mt-10">
   <h1 class="text-3xl font-bold text-center mb-6">Lora Card Game</h1>
-  
+
   <%= if @error_message do %>
     <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-      <p><%= @error_message %></p>
+      <p>{@error_message}</p>
     </div>
   <% end %>
 
   <div class="grid grid-cols-1 gap-6 mb-4">
     <div class="border-b pb-4">
       <h2 class="text-xl font-semibold mb-4">Create a New Game</h2>
-      <.form :let={f} id="create-game-form" for={%{}} as={:create_player} phx-submit="create_game" phx-change="validate" class="space-y-4">
+      <.form
+        :let={f}
+        id="create-game-form"
+        for={%{}}
+        as={:create_player}
+        phx-submit="create_game"
+        phx-change="validate"
+        class="space-y-4"
+      >
         <div>
           <label class="block text-sm font-medium text-gray-700">Your Name</label>
-          <.input field={f[:name]} value={@player_name} placeholder="Enter your name" required={true} class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
+          <.input
+            field={f[:name]}
+            value={@player_name}
+            placeholder="Enter your name"
+            required={true}
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+          />
         </div>
         <div>
-          <.button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Create Game</.button>
+          <.button
+            type="submit"
+            class="w-full bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          >
+            Create Game
+          </.button>
         </div>
       </.form>
     </div>
 
     <div>
       <h2 class="text-xl font-semibold mb-4">Join an Existing Game</h2>
-      <.form :let={f} id="join-game-form" for={%{}} as={:join_player} phx-submit="join_game" phx-change="validate" class="space-y-4">
+      <.form
+        :let={f}
+        id="join-game-form"
+        for={%{}}
+        as={:join_player}
+        phx-submit="join_game"
+        phx-change="validate"
+        class="space-y-4"
+      >
         <div>
           <label class="block text-sm font-medium text-gray-700">Your Name</label>
-          <.input field={f[:name]} value={@player_name} placeholder="Enter your name" required={true} class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
+          <.input
+            field={f[:name]}
+            value={@player_name}
+            placeholder="Enter your name"
+            required={true}
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+          />
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700">Game Code</label>
-          <.input field={f[:game_code]} value={@game_code} placeholder="Enter 6-character code" required={true} maxlength={6} class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 uppercase" />
+          <.input
+            field={f[:game_code]}
+            value={@game_code}
+            placeholder="Enter 6-character code"
+            required={true}
+            maxlength={6}
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 uppercase"
+          />
         </div>
         <div>
-          <.button type="submit" class="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">Join Game</.button>
+          <.button
+            type="submit"
+            class="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+          >
+            Join Game
+          </.button>
         </div>
       </.form>
     </div>

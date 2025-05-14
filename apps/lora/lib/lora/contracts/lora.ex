@@ -12,7 +12,7 @@ defmodule Lora.Contracts.Lora do
   @impl true
   def is_legal_move?(state, seat, {suit, rank}) do
     layout = state.lora_layout
-    hand = state.hands[seat]
+    _hand = state.hands[seat]
 
     # If this is the first card played in Lora, any card is legal
     if Enum.all?(layout, fn {_, cards} -> cards == [] end) do
@@ -32,8 +32,10 @@ defmodule Lora.Contracts.Lora do
             |> Enum.find(fn _ -> true end)
 
           case any_laid_card do
-            nil -> true  # No cards played yet
-            {_, first_rank} -> rank == first_rank  # Must match the first played card's rank
+            # No cards played yet
+            nil -> true
+            # Must match the first played card's rank
+            {_, first_rank} -> rank == first_rank
           end
 
         # Cards of this suit already played, card must be the next in sequence
@@ -59,11 +61,7 @@ defmodule Lora.Contracts.Lora do
       {next_player, can_anyone_play} = find_next_player_who_can_play(state, hands, seat)
 
       if can_anyone_play do
-        {:ok, %{state |
-          hands: hands,
-          lora_layout: lora_layout,
-          current_player: next_player
-        }}
+        {:ok, %{state | hands: hands, lora_layout: lora_layout, current_player: next_player}}
       else
         # No one can play, the deal is over
         deal_over_state = handle_lora_winner(state, hands, seat)
@@ -156,20 +154,17 @@ defmodule Lora.Contracts.Lora do
 
     # Check if the game is over
     if Game.game_over?(state) do
-      %{state |
-        hands: hands,
-        scores: updated_scores,
-        phase: :finished
-      }
+      %{state | hands: hands, scores: updated_scores, phase: :finished}
     else
       # Move to the next contract or dealer
       {next_dealer, next_contract} = Game.next_dealer_and_contract(state)
 
       # Deal the next contract
-      Game.deal_new_contract(%{state |
-        dealer_seat: next_dealer,
-        contract_index: next_contract,
-        scores: updated_scores
+      Game.deal_new_contract(%{
+        state
+        | dealer_seat: next_dealer,
+          contract_index: next_contract,
+          scores: updated_scores
       })
     end
   end

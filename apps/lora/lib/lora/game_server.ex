@@ -10,7 +10,8 @@ defmodule Lora.GameServer do
   alias Lora.Game
   alias Phoenix.PubSub
 
-  @reconnect_timeout 30_000  # 30 seconds
+  # 30 seconds
+  @reconnect_timeout 30_000
 
   # Client API
 
@@ -111,7 +112,10 @@ defmodule Lora.GameServer do
         if length(updated_game.players) == 4 do
           broadcast_event(updated_game.id, :game_started, %{})
         else
-          broadcast_event(updated_game.id, :player_joined, %{player: player_name, seat: length(updated_game.players)})
+          broadcast_event(updated_game.id, :player_joined, %{
+            player: player_name,
+            seat: length(updated_game.players)
+          })
         end
 
         {:reply, {:ok, updated_game}, %{state | game: updated_game, player_pids: updated_pids}}
@@ -135,6 +139,7 @@ defmodule Lora.GameServer do
           {:ok, updated_game} ->
             # Broadcast the new state and card played event
             broadcast_state(updated_game)
+
             broadcast_event(
               updated_game.id,
               :card_played,
@@ -172,6 +177,7 @@ defmodule Lora.GameServer do
           {:ok, updated_game} ->
             # Broadcast the new state and pass event
             broadcast_state(updated_game)
+
             broadcast_event(
               updated_game.id,
               :player_passed,
@@ -203,11 +209,13 @@ defmodule Lora.GameServer do
 
       broadcast_event(state.game.id, :player_reconnected, %{player_id: player_id})
 
-      {:reply, {:ok, state.game}, %{state |
-        player_pids: updated_pids,
-        disconnected_players: updated_disconnected,
-        timers: updated_timers
-      }}
+      {:reply, {:ok, state.game},
+       %{
+         state
+         | player_pids: updated_pids,
+           disconnected_players: updated_disconnected,
+           timers: updated_timers
+       }}
     else
       # Player wasn't disconnected, just update their PID
       updated_pids = Map.put(state.player_pids, player_id, pid)
@@ -238,7 +246,8 @@ defmodule Lora.GameServer do
   @impl true
   def handle_cast({:player_disconnect, player_id}, state) do
     # If player exists and is not already disconnected
-    if Map.has_key?(state.player_pids, player_id) and not Map.has_key?(state.disconnected_players, player_id) do
+    if Map.has_key?(state.player_pids, player_id) and
+         not Map.has_key?(state.disconnected_players, player_id) do
       # Start a timer for disconnection
       timer = Process.send_after(self(), {:player_timeout, player_id}, @reconnect_timeout)
 
@@ -267,11 +276,13 @@ defmodule Lora.GameServer do
 
     broadcast_event(state.game.id, :player_timeout, %{player_id: player_id})
 
-    {:noreply, %{state |
-      player_pids: updated_pids,
-      disconnected_players: updated_disconnected,
-      timers: updated_timers
-    }}
+    {:noreply,
+     %{
+       state
+       | player_pids: updated_pids,
+         disconnected_players: updated_disconnected,
+         timers: updated_timers
+     }}
   end
 
   # Helper functions

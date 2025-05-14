@@ -14,7 +14,8 @@ defmodule Lora.Contracts.TrickTaking do
 
     case state.trick do
       # First card in trick can be anything
-      [] -> true
+      [] ->
+        true
 
       # Otherwise must follow suit if possible
       [{_, {led_suit, _}} | _] ->
@@ -40,10 +41,11 @@ defmodule Lora.Contracts.TrickTaking do
       winner_seat = Deck.trick_winner(updated_trick)
 
       # Add the cards from the trick to the winner's taken pile
-      taken = Map.update!(state.taken, winner_seat, fn taken_cards ->
-        trick_cards = Enum.map(updated_trick, fn {_seat, card} -> card end)
-        taken_cards ++ [trick_cards]
-      end)
+      taken =
+        Map.update!(state.taken, winner_seat, fn taken_cards ->
+          trick_cards = Enum.map(updated_trick, fn {_seat, card} -> card end)
+          taken_cards ++ [trick_cards]
+        end)
 
       # Check if the deal is over (all cards played)
       if Enum.all?(hands, fn {_seat, hand} -> hand == [] end) do
@@ -52,12 +54,7 @@ defmodule Lora.Contracts.TrickTaking do
         {:ok, deal_over_state}
       else
         # Continue with the next trick, winner leads
-        {:ok, %{state |
-          hands: hands,
-          trick: [],
-          taken: taken,
-          current_player: winner_seat
-        }}
+        {:ok, %{state | hands: hands, trick: [], taken: taken, current_player: winner_seat}}
       end
     else
       # Continue with the next player
@@ -81,21 +78,17 @@ defmodule Lora.Contracts.TrickTaking do
 
     # Check if the game is over
     if Game.game_over?(state) do
-      %{state |
-        hands: hands,
-        taken: taken,
-        scores: updated_scores,
-        phase: :finished
-      }
+      %{state | hands: hands, taken: taken, scores: updated_scores, phase: :finished}
     else
       # Move to the next contract or dealer
       {next_dealer, next_contract} = Game.next_dealer_and_contract(state)
 
       # Deal the next contract
-      Game.deal_new_contract(%{state |
-        dealer_seat: next_dealer,
-        contract_index: next_contract,
-        scores: updated_scores
+      Game.deal_new_contract(%{
+        state
+        | dealer_seat: next_dealer,
+          contract_index: next_contract,
+          scores: updated_scores
       })
     end
   end
