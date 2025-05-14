@@ -12,7 +12,22 @@ defmodule Lora.Game do
     seat: integer()
   }
 
-  @type game_state :: %{
+  defstruct [
+    :id,
+    :players,
+    :dealer_seat,
+    :contract_index,
+    :hands,
+    :trick,
+    :taken,
+    :lora_layout,
+    :scores,
+    :phase,
+    :current_player,
+    :dealt_count
+  ]
+
+  @type t :: %__MODULE__{
     id: binary(),
     players: [player()],
     dealer_seat: integer(),
@@ -23,16 +38,16 @@ defmodule Lora.Game do
     lora_layout: %{Deck.suit() => [Deck.card()]},
     scores: %{integer() => integer()},
     phase: :lobby | :playing | :finished,
-    current_player: integer(),
+    current_player: integer() | nil,
     dealt_count: integer()
   }
 
   @doc """
   Creates a new game with the given ID.
   """
-  @spec new_game(binary()) :: game_state()
+  @spec new_game(binary()) :: t()
   def new_game(id) do
-    %{
+    %__MODULE__{
       id: id,
       players: [],
       dealer_seat: 1,
@@ -52,7 +67,7 @@ defmodule Lora.Game do
   Adds a player to the game.
   Returns {:ok, updated_state} if successful, or {:error, reason} if not.
   """
-  @spec add_player(game_state(), binary(), binary()) :: {:ok, game_state()} | {:error, binary()}
+  @spec add_player(t(), binary(), binary()) :: {:ok, t()} | {:error, binary()}
   def add_player(state, player_id, player_name) do
     cond do
       state.phase != :lobby ->
@@ -81,7 +96,7 @@ defmodule Lora.Game do
   @doc """
   Start the game by dealing the first contract.
   """
-  @spec start_game(game_state()) :: game_state()
+  @spec start_game(t()) :: t()
   def start_game(state) do
     # First dealer is seat 1
     deal_new_contract(
@@ -97,7 +112,7 @@ defmodule Lora.Game do
   @doc """
   Deals a new contract.
   """
-  @spec deal_new_contract(game_state()) :: game_state()
+  @spec deal_new_contract(t()) :: t()
   def deal_new_contract(state) do
     contract = Contract.at(state.contract_index)
 
@@ -131,7 +146,7 @@ defmodule Lora.Game do
   Plays a card from a player's hand.
   Returns {:ok, new_state} or {:error, reason}
   """
-  @spec play_card(game_state(), integer(), Deck.card()) :: {:ok, game_state()} | {:error, binary()}
+  @spec play_card(t(), integer(), Deck.card()) :: {:ok, t()} | {:error, binary()}
   def play_card(state, seat, card) do
     cond do
       state.phase != :playing ->
@@ -165,7 +180,7 @@ defmodule Lora.Game do
   @doc """
   Handles playing a card in a trick-taking contract.
   """
-  @spec play_trick_taking_card(game_state(), integer(), Deck.card(), map()) :: {:ok, game_state()}
+  @spec play_trick_taking_card(t(), integer(), Deck.card(), map()) :: {:ok, t()}
   def play_trick_taking_card(state, seat, card, hands) do
     # Add the card to the current trick
     updated_trick = state.trick ++ [{seat, card}]
@@ -205,7 +220,7 @@ defmodule Lora.Game do
   @doc """
   Handles playing a card in the Lora contract.
   """
-  @spec play_lora_card(game_state(), integer(), Deck.card(), map()) :: {:ok, game_state()}
+  @spec play_lora_card(t(), integer(), Deck.card(), map()) :: {:ok, t()}
   def play_lora_card(state, seat, {suit, rank}, hands) do
     # Add the card to the lora layout
     lora_layout = Map.update!(state.lora_layout, suit, fn cards -> cards ++ [{suit, rank}] end)
@@ -236,7 +251,7 @@ defmodule Lora.Game do
   @doc """
   Pass in the Lora contract when a player has no legal moves.
   """
-  @spec pass_lora(game_state(), integer()) :: {:ok, game_state()} | {:error, binary()}
+  @spec pass_lora(t(), integer()) :: {:ok, t()} | {:error, binary()}
   def pass_lora(state, seat) do
     contract = Contract.at(state.contract_index)
 
@@ -275,7 +290,7 @@ defmodule Lora.Game do
   Find the next player who can make a legal move in Lora.
   Returns {next_player_seat, true} if found, or {nil, false} if no one can play.
   """
-  @spec find_next_player_who_can_play(game_state(), map(), integer()) :: {integer() | nil, boolean()}
+  @spec find_next_player_who_can_play(t(), map(), integer()) :: {integer() | nil, boolean()}
   def find_next_player_who_can_play(state, _hands, current_seat) do
     # Try each player in order
     Enum.reduce_while(1..4, {nil, false}, fn _, _ ->
@@ -297,7 +312,7 @@ defmodule Lora.Game do
   @doc """
   Handle the end of a deal in trick-taking contracts.
   """
-  @spec handle_deal_over(game_state(), map(), map(), integer()) :: game_state()
+  @spec handle_deal_over(t(), map(), map(), integer()) :: t()
   def handle_deal_over(state, hands, taken, last_trick_winner) do
     contract = Contract.at(state.contract_index)
 
@@ -339,7 +354,7 @@ defmodule Lora.Game do
   @doc """
   Handle the winner of a Lora contract.
   """
-  @spec handle_lora_winner(game_state(), map(), integer()) :: game_state()
+  @spec handle_lora_winner(t(), map(), integer()) :: t()
   def handle_lora_winner(state, hands, winner_seat) do
     # Calculate Lora scores
     contract_scores = Score.lora(hands, winner_seat)
@@ -382,7 +397,7 @@ defmodule Lora.Game do
   @doc """
   Determines the next dealer and contract for a new deal.
   """
-  @spec next_dealer_and_contract(game_state()) :: {integer(), integer()}
+  @spec next_dealer_and_contract(t()) :: {integer(), integer()}
   def next_dealer_and_contract(state) do
     # Each dealer deals all 7 contracts before moving to the next dealer
     next_contract = rem(state.contract_index + 1, 7)
@@ -399,7 +414,7 @@ defmodule Lora.Game do
   @doc """
   Determines if the game is over (28 deals played).
   """
-  @spec game_over?(game_state()) :: boolean()
+  @spec game_over?(t()) :: boolean()
   def game_over?(state) do
     state.dealt_count >= 28
   end
@@ -415,7 +430,7 @@ defmodule Lora.Game do
   @doc """
   Checks if the move is legal based on the current contract and game state.
   """
-  @spec is_legal_move?(game_state(), integer(), Deck.card()) :: boolean()
+  @spec is_legal_move?(t(), integer(), Deck.card()) :: boolean()
   def is_legal_move?(state, seat, {suit, rank}) do
     contract = Contract.at(state.contract_index)
     hand = state.hands[seat]
@@ -475,7 +490,7 @@ defmodule Lora.Game do
   @doc """
   Checks if the player has any legal moves available.
   """
-  @spec has_legal_move?(game_state(), integer()) :: boolean()
+  @spec has_legal_move?(t(), integer()) :: boolean()
   def has_legal_move?(state, seat) do
     hand = state.hands[seat]
     Enum.any?(hand, &is_legal_move?(state, seat, &1))
