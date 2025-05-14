@@ -102,6 +102,8 @@ defmodule Lora.Score do
     king_winner =
       taken
       |> Enum.find(fn {_seat, cards} ->
+        # Fix: Don't try to use Enum.any? on cards directly, ensure we're working with a list
+        cards = List.wrap(cards) |> List.flatten()
         Enum.any?(cards, &Deck.is_king_of_hearts?/1)
       end)
 
@@ -121,9 +123,19 @@ defmodule Lora.Score do
     king_in_last_trick? =
       case king_winner do
         {seat, _} ->
-          seat == last_trick_winner &&
-          Enum.any?(List.last(taken[seat]), &Deck.is_king_of_hearts?/1)
-        nil -> false
+          # Moved the condition outside the guard clause
+          if seat == last_trick_winner do
+            taken_cards = Map.get(taken, seat)
+            if is_list(taken_cards) and length(taken_cards) > 0 do
+              last_trick = List.last(taken_cards)
+              is_list(last_trick) && Enum.any?(last_trick, &Deck.is_king_of_hearts?/1)
+            else
+              false
+            end
+          else
+            false
+          end
+        _ -> false
       end
 
     # Add bonus if applicable
