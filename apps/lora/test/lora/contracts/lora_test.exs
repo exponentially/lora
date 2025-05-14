@@ -11,7 +11,8 @@ defmodule Lora.Contracts.LoraTest do
     %{id: "p4", name: "Player 4", seat: 4}
   ]
 
-  @lora_contract_index 6 # Lora is the 7th contract (0-indexed)
+  # Lora is the 7th contract (0-indexed)
+  @lora_contract_index 6
 
   describe "is_legal_move?/3" do
     setup do
@@ -50,30 +51,34 @@ defmodule Lora.Contracts.LoraTest do
 
     test "requires matching rank for new suits", %{game: game} do
       # Given: First card played is {:clubs, :ace}
-      game_with_card = %{game |
-        lora_layout: %{
-          clubs: [{:clubs, :ace}],
-          diamonds: [],
-          hearts: [],
-          spades: []
-        }
+      game_with_card = %{
+        game
+        | lora_layout: %{
+            clubs: [{:clubs, :ace}],
+            diamonds: [],
+            hearts: [],
+            spades: []
+          }
       }
 
       # When: A player tries to play a card of a different suit
       # Then: It must be of the same rank as the first card played
-      assert Lora.is_legal_move?(game_with_card, 2, {:diamonds, :ace}) # Same rank
-      refute Lora.is_legal_move?(game_with_card, 2, {:diamonds, :king}) # Different rank
+      # Same rank
+      assert Lora.is_legal_move?(game_with_card, 2, {:diamonds, :ace})
+      # Different rank
+      refute Lora.is_legal_move?(game_with_card, 2, {:diamonds, :king})
     end
 
     test "requires card to be next in sequence for existing suit", %{game: game} do
       # Given: Cards already played in clubs
-      game_with_cards = %{game |
-        lora_layout: %{
-          clubs: [{:clubs, :ace}, {:clubs, :king}],
-          diamonds: [],
-          hearts: [],
-          spades: []
-        }
+      game_with_cards = %{
+        game
+        | lora_layout: %{
+            clubs: [{:clubs, :ace}, {:clubs, :king}],
+            diamonds: [],
+            hearts: [],
+            spades: []
+          }
       }
 
       # Then: Next card in clubs must follow the sequence (king -> ace)
@@ -83,14 +88,22 @@ defmodule Lora.Contracts.LoraTest do
 
     test "handles sequence that wraps around from Ace to 7", %{game: game} do
       # Given: Cards already played in clubs up to Ace
-      game_with_cards = %{game |
-        lora_layout: %{
-          clubs: [{:clubs, 8}, {:clubs, 9}, {:clubs, 10}, {:clubs, :jack},
-                 {:clubs, :queen}, {:clubs, :king}, {:clubs, :ace}],
-          diamonds: [],
-          hearts: [],
-          spades: []
-        }
+      game_with_cards = %{
+        game
+        | lora_layout: %{
+            clubs: [
+              {:clubs, 8},
+              {:clubs, 9},
+              {:clubs, 10},
+              {:clubs, :jack},
+              {:clubs, :queen},
+              {:clubs, :king},
+              {:clubs, :ace}
+            ],
+            diamonds: [],
+            hearts: [],
+            spades: []
+          }
       }
 
       # Then: Next card in clubs must be 7
@@ -137,7 +150,9 @@ defmodule Lora.Contracts.LoraTest do
       updated_hands = %{game.hands | 1 => []}
 
       # First check that the layout update works as expected
-      lora_layout = Map.update!(game.lora_layout, :clubs, fn cards -> cards ++ [{:clubs, :ace}] end)
+      lora_layout =
+        Map.update!(game.lora_layout, :clubs, fn cards -> cards ++ [{:clubs, :ace}] end)
+
       assert lora_layout.clubs == [{:clubs, :ace}]
 
       # Then verify play_card doesn't throw an error
@@ -151,8 +166,9 @@ defmodule Lora.Contracts.LoraTest do
 
       # Then: Scores are calculated and the game moves to the next contract
       assert Map.keys(updated_game.scores) |> Enum.sort() == [1, 2, 3, 4]
+
       assert updated_game.contract_index != game.contract_index ||
-             updated_game.dealer_seat != game.dealer_seat
+               updated_game.dealer_seat != game.dealer_seat
     end
 
     test "finds next player who can play", %{game: game} do
@@ -168,10 +184,14 @@ defmodule Lora.Contracts.LoraTest do
       }
 
       modified_hands = %{
-        1 => [], # Player 1 has no cards
-        2 => [{:diamonds, :ace}], # Player 2 can play ace of diamonds
-        3 => [{:hearts, :king}], # Player 3 can't play (needs ace of hearts)
-        4 => [{:spades, :king}]  # Player 4 can't play (needs ace of spades)
+        # Player 1 has no cards
+        1 => [],
+        # Player 2 can play ace of diamonds
+        2 => [{:diamonds, :ace}],
+        # Player 3 can't play (needs ace of hearts)
+        3 => [{:hearts, :king}],
+        # Player 4 can't play (needs ace of spades)
+        4 => [{:spades, :king}]
       }
 
       modified_game = %{game | lora_layout: lora_layout, hands: modified_hands}
@@ -182,27 +202,35 @@ defmodule Lora.Contracts.LoraTest do
 
       # Then: The game recognizes that no one can play and ends
       assert updated_game.contract_index != modified_game.contract_index ||
-             updated_game.dealer_seat != modified_game.dealer_seat
+               updated_game.dealer_seat != modified_game.dealer_seat
     end
   end
 
   describe "calculate_scores/4" do
     test "gives winner -8 points and others +1 per card" do
       hands = %{
-        1 => [], # Winner with no cards
-        2 => [{:diamonds, :ace}, {:hearts, :king}], # 2 cards
-        3 => [{:clubs, 7}], # 1 card
-        4 => [{:spades, :jack}, {:hearts, 8}, {:clubs, :queen}] # 3 cards
+        # Winner with no cards
+        1 => [],
+        # 2 cards
+        2 => [{:diamonds, :ace}, {:hearts, :king}],
+        # 1 card
+        3 => [{:clubs, 7}],
+        # 3 cards
+        4 => [{:spades, :jack}, {:hearts, 8}, {:clubs, :queen}]
       }
 
       scores = Lora.calculate_scores(nil, hands, nil, 1)
 
       assert scores == %{
-        1 => -8, # Winner gets -8
-        2 => 2,  # +1 per card
-        3 => 1,  # +1 per card
-        4 => 3   # +1 per card
-      }
+               # Winner gets -8
+               1 => -8,
+               # +1 per card
+               2 => 2,
+               # +1 per card
+               3 => 1,
+               # +1 per card
+               4 => 3
+             }
     end
   end
 
@@ -213,10 +241,14 @@ defmodule Lora.Contracts.LoraTest do
         players: @players,
         contract_index: @lora_contract_index,
         hands: %{
-          1 => [{:clubs, :ace}, {:hearts, :king}], # 2 cards
-          2 => [{:diamonds, :ace}], # 1 card - winner
-          3 => [{:hearts, :ace}, {:clubs, :king}, {:diamonds, :queen}], # 3 cards
-          4 => [{:spades, :ace}, {:hearts, :queen}] # 2 cards
+          # 2 cards
+          1 => [{:clubs, :ace}, {:hearts, :king}],
+          # 1 card - winner
+          2 => [{:diamonds, :ace}],
+          # 3 cards
+          3 => [{:hearts, :ace}, {:clubs, :king}, {:diamonds, :queen}],
+          # 2 cards
+          4 => [{:spades, :ace}, {:hearts, :queen}]
         },
         scores: %{1 => 0, 2 => 0, 3 => 0, 4 => 0},
         dealer_seat: 1,
@@ -301,10 +333,14 @@ defmodule Lora.Contracts.LoraTest do
       }
 
       hands = %{
-        1 => [{:hearts, :king}, {:diamonds, :king}], # No legal moves
-        2 => [{:diamonds, :ace}], # Can play
-        3 => [{:hearts, 9}, {:spades, :king}], # No legal moves
-        4 => [{:spades, 8}, {:diamonds, 9}] # No legal moves
+        # No legal moves
+        1 => [{:hearts, :king}, {:diamonds, :king}],
+        # Can play
+        2 => [{:diamonds, :ace}],
+        # No legal moves
+        3 => [{:hearts, 9}, {:spades, :king}],
+        # No legal moves
+        4 => [{:spades, 8}, {:diamonds, 9}]
       }
 
       game = %Game{
@@ -324,7 +360,8 @@ defmodule Lora.Contracts.LoraTest do
 
     test "returns error for non-Lora contract", %{game: game} do
       # Given: The game is not in Lora contract
-      game_not_lora = %{game | contract_index: 0} # Minimum contract
+      # Minimum contract
+      game_not_lora = %{game | contract_index: 0}
 
       # When: Player tries to pass
       result = Lora.pass(game_not_lora, 1)
@@ -355,14 +392,16 @@ defmodule Lora.Contracts.LoraTest do
 
     test "ends deal when no one can play", %{game: game} do
       # Given: Only player 2 can play, but we'll test after player 2 plays
-      game_after_player2 = %{game |
-        current_player: 3,
-        hands: %{
-          1 => [{:hearts, :king}, {:diamonds, :king}],
-          2 => [], # Player 2 has played their card
-          3 => [{:hearts, 9}, {:spades, :king}],
-          4 => [{:spades, 8}, {:diamonds, 9}]
-        }
+      game_after_player2 = %{
+        game
+        | current_player: 3,
+          hands: %{
+            1 => [{:hearts, :king}, {:diamonds, :king}],
+            # Player 2 has played their card
+            2 => [],
+            3 => [{:hearts, 9}, {:spades, :king}],
+            4 => [{:spades, 8}, {:diamonds, 9}]
+          }
       }
 
       # When: Player 3 passes and no one else can play
@@ -370,7 +409,7 @@ defmodule Lora.Contracts.LoraTest do
 
       # Then: The deal ends and player with fewest cards (player 2) wins
       assert updated_game.contract_index != game_after_player2.contract_index ||
-             updated_game.dealer_seat != game_after_player2.dealer_seat
+               updated_game.dealer_seat != game_after_player2.dealer_seat
 
       # Scores should be updated
       assert updated_game.scores != game_after_player2.scores

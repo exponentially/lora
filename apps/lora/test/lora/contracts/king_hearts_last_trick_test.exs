@@ -42,7 +42,7 @@ defmodule Lora.Contracts.KingHeartsLastTrickTest do
       # Given: Player 2 has both clubs and diamonds
       # When: The trick starts with a club
       game_with_trick = %{game | trick: [{1, {:clubs, :ace}}]}
-      
+
       # Then: Player 2 must play a club
       assert KingHeartsLastTrick.is_legal_move?(game_with_trick, 2, {:clubs, 7})
       refute KingHeartsLastTrick.is_legal_move?(game_with_trick, 2, {:diamonds, :king})
@@ -52,7 +52,7 @@ defmodule Lora.Contracts.KingHeartsLastTrickTest do
       # Given: Player 3 has no clubs
       # When: The trick starts with a club
       game_with_trick = %{game | trick: [{1, {:clubs, :ace}}]}
-      
+
       # Then: Player 3 can play any card
       assert KingHeartsLastTrick.is_legal_move?(game_with_trick, 3, {:hearts, 8})
       assert KingHeartsLastTrick.is_legal_move?(game_with_trick, 3, {:spades, :jack})
@@ -80,7 +80,7 @@ defmodule Lora.Contracts.KingHeartsLastTrickTest do
 
       # When: Player 1 plays a card
       {:ok, updated_game} = KingHeartsLastTrick.play_card(game, 1, {:clubs, :ace}, hands)
-      
+
       # Then: The trick should be updated and next player's turn
       assert [{1, {:clubs, :ace}}] = updated_game.trick
       assert updated_game.current_player == 2
@@ -106,14 +106,18 @@ defmodule Lora.Contracts.KingHeartsLastTrickTest do
 
       # When: Scores are calculated
       scores = KingHeartsLastTrick.calculate_scores(%Game{}, %{}, taken, 3)
-      
+
       # Then: Player 2 gets 4 points for King of Hearts, Player 3 gets 4 points for last trick
       assert scores == %{
-        1 => 0,  # No king, not last trick winner
-        2 => 4,  # Has King of Hearts
-        3 => 4,  # Won last trick
-        4 => 0   # No king, not last trick winner
-      }
+               # No king, not last trick winner
+               1 => 0,
+               # Has King of Hearts
+               2 => 4,
+               # Won last trick
+               3 => 4,
+               # No king, not last trick winner
+               4 => 0
+             }
     end
 
     test "awards 16 points when King of Hearts is in the last trick" do
@@ -133,15 +137,19 @@ defmodule Lora.Contracts.KingHeartsLastTrickTest do
 
       # When: Scores are calculated with Player 3 as last trick winner
       scores = KingHeartsLastTrick.calculate_scores(%Game{}, %{}, taken, 3)
-      
+
       # Then: Player 3 gets 8 points (4 for king + 4 for last trick)
       # Note: The bonus is only applied if the king of hearts is taken in the last trick
       assert scores == %{
-        1 => 0,   # No king, not last trick winner
-        2 => 0,   # No king, not last trick winner
-        3 => 8,   # Has King of Hearts (4) and is last trick winner (4)
-        4 => 0    # No king, not last trick winner
-      }
+               # No king, not last trick winner
+               1 => 0,
+               # No king, not last trick winner
+               2 => 0,
+               # Has King of Hearts (4) and is last trick winner (4)
+               3 => 8,
+               # No king, not last trick winner
+               4 => 0
+             }
     end
 
     test "no bonus when King of Hearts is not in last trick" do
@@ -161,14 +169,18 @@ defmodule Lora.Contracts.KingHeartsLastTrickTest do
 
       # When: Scores are calculated
       scores = KingHeartsLastTrick.calculate_scores(%Game{}, %{}, taken, 3)
-      
+
       # Then: Player 2 gets 4 points for king, Player 3 gets 4 points for last trick
       assert scores == %{
-        1 => 0,  # No king, not last trick winner
-        2 => 4,  # Has King of Hearts (not in last trick)
-        3 => 4,  # Won last trick (without King of Hearts)
-        4 => 0   # No king, not last trick winner
-      }
+               # No king, not last trick winner
+               1 => 0,
+               # Has King of Hearts (not in last trick)
+               2 => 4,
+               # Won last trick (without King of Hearts)
+               3 => 4,
+               # No king, not last trick winner
+               4 => 0
+             }
     end
 
     test "handles empty taken piles" do
@@ -182,14 +194,15 @@ defmodule Lora.Contracts.KingHeartsLastTrickTest do
 
       # When: Scores are calculated
       scores = KingHeartsLastTrick.calculate_scores(%Game{}, %{}, taken, 1)
-      
+
       # Then: Only last trick winner gets points
       assert scores == %{
-        1 => 4,  # Last trick winner
-        2 => 0,
-        3 => 0,
-        4 => 0
-      }
+               # Last trick winner
+               1 => 4,
+               2 => 0,
+               3 => 0,
+               4 => 0
+             }
     end
 
     test "handles missing King of Hearts edge case" do
@@ -209,14 +222,18 @@ defmodule Lora.Contracts.KingHeartsLastTrickTest do
 
       # When: Scores are calculated
       scores = KingHeartsLastTrick.calculate_scores(%Game{}, %{}, taken, 3)
-      
+
       # Then: Only last trick winner gets points
       assert scores == %{
-        1 => 0,  # No king, not last trick winner
-        2 => 0,  # No king, not last trick winner
-        3 => 4,  # Last trick winner (no King of Hearts)
-        4 => 0   # No king, not last trick winner
-      }
+               # No king, not last trick winner
+               1 => 0,
+               # No king, not last trick winner
+               2 => 0,
+               # Last trick winner (no King of Hearts)
+               3 => 4,
+               # No king, not last trick winner
+               4 => 0
+             }
     end
 
     test "handles same player taking all tricks including King of Hearts" do
@@ -235,14 +252,15 @@ defmodule Lora.Contracts.KingHeartsLastTrickTest do
 
       # When: Scores are calculated
       scores = KingHeartsLastTrick.calculate_scores(%Game{}, %{}, taken, 1)
-      
+
       # Then: Player 1 gets 8 points (4 for king + 4 for last trick)
       assert scores == %{
-        1 => 8,  # Has King of Hearts (4) and won last trick (4)
-        2 => 0,
-        3 => 0,
-        4 => 0
-      }
+               # Has King of Hearts (4) and won last trick (4)
+               1 => 8,
+               2 => 0,
+               3 => 0,
+               4 => 0
+             }
     end
   end
 
@@ -255,12 +273,13 @@ defmodule Lora.Contracts.KingHeartsLastTrickTest do
         taken: %{1 => [], 2 => [], 3 => [], 4 => []},
         contract_index: @king_hearts_last_trick_contract_index,
         dealer_seat: 1,
-        scores: %{1 => 10, 2 => 5, 3 => 8, 4 => 12}  # Existing scores
+        # Existing scores
+        scores: %{1 => 10, 2 => 5, 3 => 8, 4 => 12}
       }
 
       # All hands are empty at end of deal
       hands = %{1 => [], 2 => [], 3 => [], 4 => []}
-      
+
       # Player 2 has King of Hearts, Player 3 won last trick
       taken = %{
         1 => [
@@ -277,17 +296,21 @@ defmodule Lora.Contracts.KingHeartsLastTrickTest do
 
       # When: Deal is over
       updated_game = KingHeartsLastTrick.handle_deal_over(game, hands, taken, 3)
-      
+
       # Then: Scores should reflect KingHeartsLastTrick scoring
       expected_scores = %{
-        1 => 10,  # No change (10 + 0)
-        2 => 9,   # 5 + 4 (King of Hearts)
-        3 => 12,  # 8 + 4 (Last trick)
-        4 => 12   # No change (12 + 0)
+        # No change (10 + 0)
+        1 => 10,
+        # 5 + 4 (King of Hearts)
+        2 => 9,
+        # 8 + 4 (Last trick)
+        3 => 12,
+        # No change (12 + 0)
+        4 => 12
       }
-      
+
       assert updated_game.scores == expected_scores
-      
+
       # Game state should be updated
       assert is_map(updated_game)
       assert updated_game.scores != game.scores
@@ -301,7 +324,7 @@ defmodule Lora.Contracts.KingHeartsLastTrickTest do
         id: "test_game",
         contract_index: @king_hearts_last_trick_contract_index
       }
-      
+
       # When/Then: No player can pass
       for seat <- 1..4 do
         refute KingHeartsLastTrick.can_pass?(game, seat)
@@ -316,9 +339,10 @@ defmodule Lora.Contracts.KingHeartsLastTrickTest do
         id: "test_game",
         contract_index: @king_hearts_last_trick_contract_index
       }
-      
+
       # When/Then: Attempting to pass returns an error
-      assert {:error, "Cannot pass in the King of Hearts and Last Trick contract"} = KingHeartsLastTrick.pass(game, 1)
+      assert {:error, "Cannot pass in the King of Hearts and Last Trick contract"} =
+               KingHeartsLastTrick.pass(game, 1)
     end
   end
 
@@ -343,18 +367,21 @@ defmodule Lora.Contracts.KingHeartsLastTrickTest do
         3 => [],
         4 => []
       }
-      
+
       # When: Final scoring happens with Player 2 winning last trick
-      updated_game = KingHeartsLastTrick.handle_deal_over(
-        game,
-        %{1 => [], 2 => [], 3 => [], 4 => []},
-        taken,
-        2 # Player 2 won the last trick
-      )
-      
+      updated_game =
+        KingHeartsLastTrick.handle_deal_over(
+          game,
+          %{1 => [], 2 => [], 3 => [], 4 => []},
+          taken,
+          # Player 2 won the last trick
+          2
+        )
+
       # Then: Player 2 should get 8 points total
       assert updated_game.scores[1] == 0
-      assert updated_game.scores[2] == 8 # 4 (king) + 4 (last trick)
+      # 4 (king) + 4 (last trick)
+      assert updated_game.scores[2] == 8
       assert updated_game.scores[3] == 0
       assert updated_game.scores[4] == 0
     end

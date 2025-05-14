@@ -131,10 +131,12 @@ defmodule LoraWeb.GameLive do
     if player_id do
       # Get current presence information
       presences = Presence.list(Presence.game_topic(game.id))
+
       socket =
         socket
         |> assign_game_state(game, player_id)
         |> assign(:presences, presences)
+
       {:noreply, socket}
     else
       Logger.error("Player ID not found in socket assigns during game update")

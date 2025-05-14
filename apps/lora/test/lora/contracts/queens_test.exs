@@ -42,7 +42,7 @@ defmodule Lora.Contracts.QueensTest do
       # Given: Player 2 has both clubs and diamonds
       # When: The trick starts with a club
       game_with_trick = %{game | trick: [{1, {:clubs, :ace}}]}
-      
+
       # Then: Player 2 must play a club
       assert Queens.is_legal_move?(game_with_trick, 2, {:clubs, 7})
       refute Queens.is_legal_move?(game_with_trick, 2, {:diamonds, :king})
@@ -52,7 +52,7 @@ defmodule Lora.Contracts.QueensTest do
       # Given: Player 3 has no clubs
       # When: The trick starts with a club
       game_with_trick = %{game | trick: [{1, {:clubs, :ace}}]}
-      
+
       # Then: Player 3 can play any card
       assert Queens.is_legal_move?(game_with_trick, 3, {:hearts, 8})
       assert Queens.is_legal_move?(game_with_trick, 3, {:spades, :queen})
@@ -80,7 +80,7 @@ defmodule Lora.Contracts.QueensTest do
 
       # When: Player 1 plays a card
       {:ok, updated_game} = Queens.play_card(game, 1, {:clubs, :ace}, hands)
-      
+
       # Then: The trick should be updated and next player's turn
       assert [{1, {:clubs, :ace}}] = updated_game.trick
       assert updated_game.current_player == 2
@@ -114,14 +114,18 @@ defmodule Lora.Contracts.QueensTest do
 
       # When: Scores are calculated
       scores = Queens.calculate_scores(%Game{}, %{}, taken, 1)
-      
+
       # Then: Each player gets +2 points per queen taken
       assert scores == %{
-        1 => 2,   # 1 queen (hearts) = 2 points
-        2 => 4,   # 2 queens (clubs, spades) = 4 points
-        3 => 0,   # 0 queens = 0 points
-        4 => 2    # 1 queen (diamonds) = 2 points
-      }
+               # 1 queen (hearts) = 2 points
+               1 => 2,
+               # 2 queens (clubs, spades) = 4 points
+               2 => 4,
+               # 0 queens = 0 points
+               3 => 0,
+               # 1 queen (diamonds) = 2 points
+               4 => 2
+             }
     end
 
     test "handles empty taken piles" do
@@ -135,14 +139,14 @@ defmodule Lora.Contracts.QueensTest do
 
       # When: Scores are calculated
       scores = Queens.calculate_scores(%Game{}, %{}, taken, 1)
-      
+
       # Then: Everyone gets 0 points
       assert scores == %{
-        1 => 0,
-        2 => 0,
-        3 => 0,
-        4 => 0
-      }
+               1 => 0,
+               2 => 0,
+               3 => 0,
+               4 => 0
+             }
     end
 
     test "all queens taken by one player" do
@@ -168,14 +172,18 @@ defmodule Lora.Contracts.QueensTest do
 
       # When: Scores are calculated
       scores = Queens.calculate_scores(%Game{}, %{}, taken, 1)
-      
+
       # Then: Player with all queens gets 8 points, others get 0
       assert scores == %{
-        1 => 8,  # 4 queens * 2 points = 8 points
-        2 => 0,  # No queens
-        3 => 0,  # No queens
-        4 => 0   # No queens
-      }
+               # 4 queens * 2 points = 8 points
+               1 => 8,
+               # No queens
+               2 => 0,
+               # No queens
+               3 => 0,
+               # No queens
+               4 => 0
+             }
     end
 
     test "correctly identifies queens in nested trick structure" do
@@ -193,17 +201,21 @@ defmodule Lora.Contracts.QueensTest do
           [{:spades, :queen}, {:clubs, 9}, {:diamonds, 7}, {:hearts, 7}]
         ]
       }
-      
+
       # When: Scores are calculated
       scores = Queens.calculate_scores(%Game{}, %{}, taken, 1)
-      
+
       # Then: Correct points awarded for queens taken
       assert scores == %{
-        1 => 2,  # 1 queen (diamonds) = 2 points
-        2 => 4,  # 2 queens (clubs, hearts) = 4 points
-        3 => 0,  # No queens
-        4 => 2   # 1 queen (spades) = 2 points
-      }
+               # 1 queen (diamonds) = 2 points
+               1 => 2,
+               # 2 queens (clubs, hearts) = 4 points
+               2 => 4,
+               # No queens
+               3 => 0,
+               # 1 queen (spades) = 2 points
+               4 => 2
+             }
     end
   end
 
@@ -216,12 +228,13 @@ defmodule Lora.Contracts.QueensTest do
         taken: %{1 => [], 2 => [], 3 => [], 4 => []},
         contract_index: @queens_contract_index,
         dealer_seat: 1,
-        scores: %{1 => 10, 2 => 5, 3 => 8, 4 => 12}  # Existing scores
+        # Existing scores
+        scores: %{1 => 10, 2 => 5, 3 => 8, 4 => 12}
       }
 
       # All hands are empty at end of deal
       hands = %{1 => [], 2 => [], 3 => [], 4 => []}
-      
+
       # Each player has taken different queens
       taken = %{
         1 => [
@@ -240,17 +253,21 @@ defmodule Lora.Contracts.QueensTest do
 
       # When: Deal is over
       updated_game = Queens.handle_deal_over(game, hands, taken, 1)
-      
+
       # Then: Scores should reflect Queens scoring (+2 per queen)
       expected_scores = %{
-        1 => 12,  # 10 + 2 (1 queen)
-        2 => 7,   # 5 + 2 (1 queen)
-        3 => 10,  # 8 + 2 (1 queen)
-        4 => 14   # 12 + 2 (1 queen)
+        # 10 + 2 (1 queen)
+        1 => 12,
+        # 5 + 2 (1 queen)
+        2 => 7,
+        # 8 + 2 (1 queen)
+        3 => 10,
+        # 12 + 2 (1 queen)
+        4 => 14
       }
-      
+
       assert updated_game.scores == expected_scores
-      
+
       # Game state should be updated
       assert is_map(updated_game)
       assert updated_game.scores != game.scores
@@ -264,7 +281,7 @@ defmodule Lora.Contracts.QueensTest do
         id: "test_game",
         contract_index: @queens_contract_index
       }
-      
+
       # When/Then: No player can pass
       for seat <- 1..4 do
         refute Queens.can_pass?(game, seat)
@@ -279,7 +296,7 @@ defmodule Lora.Contracts.QueensTest do
         id: "test_game",
         contract_index: @queens_contract_index
       }
-      
+
       # When/Then: Attempting to pass returns an error
       assert {:error, "Cannot pass in the Queens contract"} = Queens.pass(game, 1)
     end
@@ -293,46 +310,52 @@ defmodule Lora.Contracts.QueensTest do
         players: @players,
         contract_index: @queens_contract_index,
         trick: [
-          {1, {:diamonds, :ace}},    # Player 1 leads with Ace
-          {2, {:diamonds, :queen}},  # Player 2 plays Queen (worth 2 points)
-          {3, {:diamonds, 7}}        # Player 3 plays low card
+          # Player 1 leads with Ace
+          {1, {:diamonds, :ace}},
+          # Player 2 plays Queen (worth 2 points)
+          {2, {:diamonds, :queen}},
+          # Player 3 plays low card
+          {3, {:diamonds, 7}}
         ],
         current_player: 4,
         hands: %{
           1 => [{:clubs, :ace}],
           2 => [{:hearts, 9}],
           3 => [{:spades, 10}],
-          4 => [{:diamonds, :king}]  # Player 4 will play King (not enough to win)
+          # Player 4 will play King (not enough to win)
+          4 => [{:diamonds, :king}]
         },
         taken: %{1 => [], 2 => [], 3 => [], 4 => []}
       }
-      
+
       # When: Player 4 plays the King of Diamonds and trick completes
       {:ok, updated_game} = Queens.play_card(game, 4, {:diamonds, :king}, game.hands)
-      
+
       # Then: Player 1 should win the trick because Ace is highest
       assert updated_game.taken[1] != []
-      assert updated_game.current_player == 1 # Winner leads next trick
-      
+      # Winner leads next trick
+      assert updated_game.current_player == 1
+
       # And Player 1's taken pile should contain the Queen of Diamonds
       trick_cards = List.flatten(updated_game.taken[1])
       assert Enum.member?(trick_cards, {:diamonds, :queen})
-      
+
       # When: Game is over and scores are calculated
-      final_game = Queens.handle_deal_over(
-        %{updated_game | scores: %{1 => 0, 2 => 0, 3 => 0, 4 => 0}},
-        %{1 => [], 2 => [], 3 => [], 4 => []}, 
-        updated_game.taken,
-        1
-      )
-      
+      final_game =
+        Queens.handle_deal_over(
+          %{updated_game | scores: %{1 => 0, 2 => 0, 3 => 0, 4 => 0}},
+          %{1 => [], 2 => [], 3 => [], 4 => []},
+          updated_game.taken,
+          1
+        )
+
       # Then: Player 1 should get 2 points for the Queen of Diamonds
       assert final_game.scores[1] == 2
       assert final_game.scores[2] == 0
       assert final_game.scores[3] == 0
       assert final_game.scores[4] == 0
     end
-    
+
     test "queens in different tricks with same winner" do
       # Given: A game where a player takes multiple queens in different tricks
       game = %Game{
@@ -355,17 +378,21 @@ defmodule Lora.Contracts.QueensTest do
         },
         scores: %{1 => 0, 2 => 0, 3 => 0, 4 => 0}
       }
-      
+
       # When: Game is over and scores are calculated
       final_game = Queens.handle_deal_over(game, game.hands, game.taken, 1)
-      
+
       # Then: Scores should reflect queens taken
       assert final_game.scores == %{
-        1 => 4,  # 2 queens * 2 points = 4 points
-        2 => 2,  # 1 queen * 2 points = 2 points
-        3 => 0,  # No queens
-        4 => 2   # 1 queen * 2 points = 2 points
-      }
+               # 2 queens * 2 points = 4 points
+               1 => 4,
+               # 1 queen * 2 points = 2 points
+               2 => 2,
+               # No queens
+               3 => 0,
+               # 1 queen * 2 points = 2 points
+               4 => 2
+             }
     end
   end
 end
