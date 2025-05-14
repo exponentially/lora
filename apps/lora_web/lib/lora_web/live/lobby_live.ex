@@ -23,7 +23,8 @@ defmodule LoraWeb.LobbyLive do
   @impl true
   def handle_event("create_game", %{"create_player" => %{"name" => name}}, socket) do
     if valid_name?(name) do
-      case Lora.create_game() do
+      player_id = socket.assigns.player_id
+      case Lora.create_game(player_id, name) do
         {:ok, game_id} ->
           {:noreply, redirect_to_game(socket, game_id, name)}
 
@@ -38,6 +39,7 @@ defmodule LoraWeb.LobbyLive do
   @impl true
   def handle_event("join_game", %{"join_player" => %{"name" => name, "game_code" => game_code}}, socket) do
     game_code = String.trim(game_code)
+    player_id = socket.assigns.player_id
 
     cond do
       not valid_name?(name) ->
@@ -50,7 +52,12 @@ defmodule LoraWeb.LobbyLive do
         {:noreply, assign(socket, error_message: "Game not found")}
 
       true ->
-        {:noreply, redirect_to_game(socket, game_code, name)}
+        case Lora.join_game(game_code, player_id, name) do
+          {:ok, _game} ->
+            {:noreply, redirect_to_game(socket, game_code, name)}
+          {:error, reason} ->
+            {:noreply, assign(socket, error_message: reason)}
+        end
     end
   end
 

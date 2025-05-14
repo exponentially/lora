@@ -18,25 +18,37 @@ defmodule Lora.GameSupervisor do
 
   @doc """
   Creates a new game with a random 6-character ID and starts its server.
+  Also adds the creator as the first player.
   """
-  def create_game do
+  def create_game(player_id, player_name) do
     # Generate a random 6-character game ID
     game_id = generate_game_id()
 
     # Start the game server
     case start_game(game_id) do
-      {:ok, _pid} -> {:ok, game_id}
+      {:ok, _pid} ->
+        # Add the creator as the first player
+        case GameServer.add_player(game_id, player_id, player_name) do
+          {:ok, _game} -> {:ok, game_id}
+          error -> error
+        end
       error -> error
     end
   end
 
   @doc """
   Creates a game with a specific ID and starts its server.
+  Also adds the creator as the first player.
   Used primarily for testing or when a specific ID is needed.
   """
-  def create_game_with_id(game_id) do
+  def create_game_with_id(game_id, player_id, player_name) do
     case start_game(game_id) do
-      {:ok, _pid} -> {:ok, game_id}
+      {:ok, _pid} ->
+        # Add the creator as the first player
+        case GameServer.add_player(game_id, player_id, player_name) do
+          {:ok, _game} -> {:ok, game_id}
+          error -> error
+        end
       error -> error
     end
   end

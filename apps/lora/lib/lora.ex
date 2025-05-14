@@ -6,10 +6,17 @@ defmodule Lora do
   alias Lora.{GameServer, GameSupervisor}
 
   @doc """
-  Creates a new game and returns its ID.
+  Creates a new game with the specified player as creator and returns its ID.
   """
-  def create_game do
-    GameSupervisor.create_game()
+  def create_game(player_id, player_name) do
+    GameSupervisor.create_game(player_id, player_name)
+  end
+
+  @doc """
+  Joins an existing game.
+  """
+  def join_game(game_id, player_id, player_name) do
+    GameServer.add_player(game_id, player_id, player_name)
   end
 
   @doc """
