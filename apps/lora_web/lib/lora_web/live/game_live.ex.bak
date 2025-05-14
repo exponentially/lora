@@ -1,4 +1,3 @@
-# filepath: /home/mjaric/prj/tmp/lora/apps/lora_web/lib/lora_web/live/game_live.ex
 defmodule LoraWeb.GameLive do
   use LoraWeb, :live_view
   require Logger
@@ -6,9 +5,24 @@ defmodule LoraWeb.GameLive do
   alias Phoenix.PubSub
   alias Lora.{Contract}
   alias LoraWeb.Presence
+  alias LoraWeb.Presence
 
   @impl true
-  def mount(%{"id" => game_id}, session, socket) do
+  def mount(%  # Helper functions
+
+  defp assign_game_state(socket, game, player_id) do
+    # Find the player's seat
+    player = Enum.find(game.players, fn p -> p.id == player_id end)
+    topic = Presence.game_topic(game.id) 
+    presences = Presence.list(topic) # Fetch presences here as well for initial load
+
+    socket
+    |> assign(:game, game)
+    |> assign(:loading, false)
+    |> assign(:player, player)
+    |> assign(:current_contract, Contract.at(game.contract_index))
+    |> assign(:legal_moves, get_legal_moves(game, player))
+    |> assign(:presences, presences) # Assign presencesid}, session, socket) do
     player_id = Map.fetch!(session, "player_id")
     player_name = session["player_name"] || player_id
 
@@ -19,21 +33,8 @@ defmodule LoraWeb.GameLive do
       if connected?(socket) do
         # Subscribe to game updates
         PubSub.subscribe(Lora.PubSub, "game:#{game_id}")
-
-        # Subscribe to presence updates for this game
-        presence_topic = Presence.game_topic(game_id)
-        PubSub.subscribe(Lora.PubSub, presence_topic)
-
-        # Track this player's presence
-        Presence.track(
-          self(),
-          presence_topic,
-          player_id,
-          %{
-            name: player_name,
-            online_at: System.system_time(:second)
-          }
-        )
+        # Track player presence
+        Presence.track_player(self(), game_id, player_id, %{name: player_name, player_id: player_id})
 
         case Lora.get_game_state(game_id) do
           {:ok, game} ->
@@ -129,27 +130,14 @@ defmodule LoraWeb.GameLive do
       end
 
     if player_id do
-      # Get current presence information
-      presences = Presence.list(Presence.game_topic(game.id))
+      presences = Presence.list_players(game.id)
       socket =
         socket
         |> assign_game_state(game, player_id)
-        |> assign(:presences, presences)
+        |> assign(:presences, presences) # Assign presences here
       {:noreply, socket}
     else
       Logger.error("Player ID not found in socket assigns during game update")
-      {:noreply, socket}
-    end
-  end
-
-  @impl true
-  def handle_info(%{event: "presence_diff"}, socket) do
-    # When presence changes, update the presences assign
-    if Map.has_key?(socket.assigns, :game) && is_map(socket.assigns.game) do
-      game_id = socket.assigns.game.id
-      presences = Presence.list(Presence.game_topic(game_id))
-      {:noreply, assign(socket, :presences, presences)}
-    else
       {:noreply, socket}
     end
   end
@@ -170,6 +158,18 @@ defmodule LoraWeb.GameLive do
     # For now, these events are just for information and don't require specific handling
     {:noreply, socket}
   end
+  
+  @impl true
+  def handle_info(%{event: "presence_diff", payload: _payload}, socket) do
+    # When presence changes, update the presences assign
+    if Map.has_key?(socket.assigns, :game) and is_map(socket.assigns.game) do
+      topic = Presence.game_topic(socket.assigns.game.id)
+      presences = Presence.list(topic)
+      {:noreply, assign(socket, :presences, presences)}
+    else
+      {:noreply, socket}
+    end
+  end
 
   @impl true
   def terminate(_reason, socket) do
@@ -180,8 +180,8 @@ defmodule LoraWeb.GameLive do
         Map.has_key?(socket.assigns, :player) and is_map(socket.assigns.player) ->
         game_id = socket.assigns.game.id
         player_id = socket.assigns.player.id
-        # Untrack from presence and tell the game server
-        Presence.untrack(self(), Presence.game_topic(game_id), player_id)
+        topic = Presence.game_topic(game_id)
+        Presence.untrack(self(), topic, player_id) # Untrack on terminate
         Lora.player_disconnect(game_id, player_id)
 
       # Fallback to the original approach for backward compatibility
@@ -189,8 +189,8 @@ defmodule LoraWeb.GameLive do
           Map.has_key?(socket.assigns, :player_id) ->
         game_id = socket.assigns.game_id
         player_id = socket.assigns.player_id
-        # Untrack from presence and tell the game server
-        Presence.untrack(self(), Presence.game_topic(game_id), player_id)
+        topic = Presence.game_topic(game_id)
+        Presence.untrack(self(), topic, player_id) # Untrack on terminate
         Lora.player_disconnect(game_id, player_id)
 
       true ->
@@ -205,8 +205,7 @@ defmodule LoraWeb.GameLive do
   defp assign_game_state(socket, game, player_id) do
     # Find the player's seat
     player = Enum.find(game.players, fn p -> p.id == player_id end)
-    # Get current presence information
-    presences = Presence.list(Presence.game_topic(game.id))
+    presences = Presence.list_players(game.id) # Fetch presences here as well for initial load
 
     socket
     |> assign(:game, game)
@@ -214,7 +213,7 @@ defmodule LoraWeb.GameLive do
     |> assign(:player, player)
     |> assign(:current_contract, Contract.at(game.contract_index))
     |> assign(:legal_moves, get_legal_moves(game, player))
-    |> assign(:presences, presences)
+    |> assign(:presences, presences) # Assign presences
   end
 
   defp get_legal_moves(_game, nil), do: []

@@ -15,7 +15,8 @@ defmodule LoraWeb.Application do
       # Start a worker by calling: LoraWeb.Worker.start_link(arg)
       # {LoraWeb.Worker, arg},
       # Start to serve requests, typically the last entry
-      LoraWeb.Endpoint
+      LoraWeb.Endpoint,
+      LoraWeb.Presence
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
