@@ -9,7 +9,6 @@ defmodule Lora.Umbrella.MixProject do
       deps: deps(),
       aliases: aliases(),
       extra_applications: [:logger],
-      test_coverage: [tool: ExCoveralls],
     ]
   end
 
