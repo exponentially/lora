@@ -47,6 +47,8 @@ defmodule Lora.ContractImplementationTest do
       # All items should be modules
       Enum.each(contracts, fn contract ->
         assert is_atom(contract)
+        # Ensure the module is loaded
+        assert Code.ensure_loaded?(contract)
         # Verify they implement the ContractBehaviour
         assert function_exported?(contract, :name, 0)
         assert function_exported?(contract, :description, 0)

@@ -95,6 +95,9 @@ defmodule Lora.ContractTest do
       contracts = Contract.all()
 
       Enum.each(contracts, fn contract ->
+        # Ensure modules are loaded first
+        Code.ensure_loaded?(contract)
+
         # Basic function existence tests
         assert function_exported?(contract, :play_card, 4)
 

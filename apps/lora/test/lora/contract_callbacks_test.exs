@@ -110,6 +110,8 @@ defmodule Lora.ContractCallbacksTest do
       contracts = Contract.all()
 
       for contract <- contracts do
+        # Ensure the module is loaded
+        assert Code.ensure_loaded?(contract)
         # Verify each required callback is implemented
         assert function_exported?(contract, :name, 0)
         assert function_exported?(contract, :description, 0)

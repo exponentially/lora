@@ -66,10 +66,23 @@ defmodule Lora.ContractEdgeCasesTest do
         contract = Contract.at(index)
         assert is_atom(contract)
         # Basic verification that it returned a proper module
+        assert Code.ensure_loaded?(contract)
         assert function_exported?(contract, :name, 0)
 
         # Verify the result matches what we expect from all() at the same index
         assert contract == Enum.at(Contract.all(), index)
+      end
+    end
+
+    test "Contract.at raises FunctionClauseError for invalid indices" do
+      # Test negative index
+      assert_raise FunctionClauseError, fn ->
+        Contract.at(-1)
+      end
+
+      # Test index that's too large
+      assert_raise FunctionClauseError, fn ->
+        Contract.at(length(Contract.all()))
       end
     end
   end
