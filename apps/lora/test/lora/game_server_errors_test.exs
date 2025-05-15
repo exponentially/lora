@@ -37,14 +37,20 @@ defmodule Lora.GameServerErrorsTest do
       %{player: player}
     end
 
-    test "player_reconnect/3 for a player that's not disconnected", %{game_id: game_id, player: player} do
+    test "player_reconnect/3 for a player that's not disconnected", %{
+      game_id: game_id,
+      player: player
+    } do
       # Reconnect without disconnecting first
       result = GameServer.player_reconnect(game_id, player.id, self())
       # Should still succeed, just updates the PID
       assert {:ok, _} = result
     end
 
-    test "player_disconnect/2 for an already disconnected player", %{game_id: game_id, player: player} do
+    test "player_disconnect/2 for an already disconnected player", %{
+      game_id: game_id,
+      player: player
+    } do
       # Disconnect once
       :ok = GameServer.player_disconnect(game_id, player.id)
 

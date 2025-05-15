@@ -55,7 +55,8 @@ defmodule Lora.Contracts.LoraAdditionalTest do
 
       # Play the player's last card
       hands_after = %{
-        1 => [], # Empty after play
+        # Empty after play
+        1 => [],
         2 => [{:diamonds, :king}],
         3 => [{:clubs, :queen}],
         4 => [{:spades, :jack}]
@@ -87,16 +88,21 @@ defmodule Lora.Contracts.LoraAdditionalTest do
         dealt_count: 1,
         phase: :playing,
         hands: %{
-          1 => [{:hearts, :ace}], # This is the only card that can legally be played
-          2 => [{:diamonds, :king}], # No legal moves
-          3 => [{:clubs, :king}], # No legal moves
-          4 => [{:spades, :king}] # No legal moves
+          # This is the only card that can legally be played
+          1 => [{:hearts, :ace}],
+          # No legal moves
+          2 => [{:diamonds, :king}],
+          # No legal moves
+          3 => [{:clubs, :king}],
+          # No legal moves
+          4 => [{:spades, :king}]
         },
         taken: %{1 => [], 2 => [], 3 => [], 4 => []}
       }
 
       hands_after = %{
-        1 => [], # Empty after play
+        # Empty after play
+        1 => [],
         2 => [{:diamonds, :king}],
         3 => [{:clubs, :king}],
         4 => [{:spades, :king}]
@@ -126,10 +132,14 @@ defmodule Lora.Contracts.LoraAdditionalTest do
         },
         current_player: 1,
         hands: %{
-          1 => [{:clubs, :king}, {:hearts, :king}], # No legal moves
-          2 => [{:diamonds, :queen}], # Has a legal move
-          3 => [{:clubs, :king}], # No legal moves
-          4 => [{:spades, :king}] # No legal moves
+          # No legal moves
+          1 => [{:clubs, :king}, {:hearts, :king}],
+          # Has a legal move
+          2 => [{:diamonds, :queen}],
+          # No legal moves
+          3 => [{:clubs, :king}],
+          # No legal moves
+          4 => [{:spades, :king}]
         }
       }
 
@@ -140,7 +150,8 @@ defmodule Lora.Contracts.LoraAdditionalTest do
       refute Lora.can_pass?(game, 2)
 
       # In a different contract, no one should be able to pass
-      different_contract_game = %{game | contract_index: 0} # Minimum contract
+      # Minimum contract
+      different_contract_game = %{game | contract_index: 0}
       refute Lora.can_pass?(different_contract_game, 1)
     end
   end
@@ -151,7 +162,8 @@ defmodule Lora.Contracts.LoraAdditionalTest do
       game = %Game{
         id: "wrong_contract_test",
         players: @players,
-        contract_index: 0, # Minimum contract
+        # Minimum contract
+        contract_index: 0,
         current_player: 1
       }
 
@@ -168,7 +180,8 @@ defmodule Lora.Contracts.LoraAdditionalTest do
         lora_layout: %{clubs: [], diamonds: [], hearts: [], spades: []},
         current_player: 1,
         hands: %{
-          1 => [{:hearts, :ace}], # Can play this
+          # Can play this
+          1 => [{:hearts, :ace}],
           2 => [{:diamonds, :king}],
           3 => [{:clubs, :queen}],
           4 => [{:spades, :jack}]

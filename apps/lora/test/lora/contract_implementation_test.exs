@@ -20,7 +20,8 @@ defmodule Lora.ContractImplementationTest do
     def play_card(game, _seat, _card, _hands), do: {:ok, game}
 
     @impl true
-    def calculate_scores(_game, _taken, _hands, _dealer_seat), do: %{1 => 5, 2 => 0, 3 => 0, 4 => 0}
+    def calculate_scores(_game, _taken, _hands, _dealer_seat),
+      do: %{1 => 5, 2 => 0, 3 => 0, 4 => 0}
 
     @impl true
     def handle_deal_over(game, _taken, _hands, _dealer_seat), do: game

@@ -48,9 +48,10 @@ defmodule Lora.ContractFinalTest do
       assert Contract.name(Lora.Contracts.Maximum) == "Maximum"
 
       assert Contract.description(Lora.Contracts.Hearts) ==
-        "Plus one point per heart taken; minus eight if one player takes all hearts"
+               "Plus one point per heart taken; minus eight if one player takes all hearts"
+
       assert Contract.description(Lora.Contracts.JackOfClubs) ==
-        "Plus eight points to the player who takes it"
+               "Plus eight points to the player who takes it"
     end
 
     test "Contract behavior with explicit module calls" do

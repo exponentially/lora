@@ -224,7 +224,8 @@ defmodule Lora.Game do
     if state.dealer_seat == 4 && dealt_count >= 7 do
       true
     else
-      dealt_count >= 28  # Regular game over condition
+      # Regular game over condition
+      dealt_count >= 28
     end
   end
 
@@ -258,7 +259,9 @@ defmodule Lora.Game do
   Gets the next seat in play order (anticlockwise).
   """
   @spec next_seat(integer() | nil) :: integer()
-  def next_seat(nil), do: 1  # Default to first seat if nil
+  # Default to first seat if nil
+  def next_seat(nil), do: 1
+
   def next_seat(seat) do
     rem(seat, 4) + 1
   end

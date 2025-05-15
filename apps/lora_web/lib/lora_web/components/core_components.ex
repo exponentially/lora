@@ -124,8 +124,16 @@ defmodule LoraWeb.CoreComponents do
       <div class="card card-compact  w-80 sm:w-96">
         <div class="card-body relative">
           <h2 :if={@title} class="card-title">
-            <.icon :if={@kind == :info} name="hero-information-circle-mini text-black" class="h-6 w-6" />
-            <.icon :if={@kind == :error} name="hero-exclamation-circle-mini text-red-900" class="h-6 w-6" />
+            <.icon
+              :if={@kind == :info}
+              name="hero-information-circle-mini text-black"
+              class="h-6 w-6"
+            />
+            <.icon
+              :if={@kind == :error}
+              name="hero-exclamation-circle-mini text-red-900"
+              class="h-6 w-6"
+            />
             {@title}
           </h2>
           <p class="mt-2 text-sm leading-5">{msg}</p>
@@ -134,8 +142,6 @@ defmodule LoraWeb.CoreComponents do
           </button>
         </div>
       </div>
-
-
     </div>
     """
   end

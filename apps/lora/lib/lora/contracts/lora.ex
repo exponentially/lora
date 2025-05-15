@@ -57,31 +57,29 @@ defmodule Lora.Contracts.Lora do
   @impl true
   def play_card(game, seat, {suit, _} = card, hands) do
     # Initialize the layout with proper defaults
-    lora_layout = if game.lora_layout do
-      %{
-        clubs: game.lora_layout[:clubs] || [],
-        diamonds: game.lora_layout[:diamonds] || [],
-        hearts: game.lora_layout[:hearts] || [],
-        spades: game.lora_layout[:spades] || []
-      }
-    else
-      %{
-        clubs: [],
-        diamonds: [],
-        hearts: [],
-        spades: []
-      }
-    end
+    lora_layout =
+      if game.lora_layout do
+        %{
+          clubs: game.lora_layout[:clubs] || [],
+          diamonds: game.lora_layout[:diamonds] || [],
+          hearts: game.lora_layout[:hearts] || [],
+          spades: game.lora_layout[:spades] || []
+        }
+      else
+        %{
+          clubs: [],
+          diamonds: [],
+          hearts: [],
+          spades: []
+        }
+      end
 
     # Update the layout with the new card
     updated_suit_cards = (lora_layout[suit] || []) ++ [card]
     updated_layout = %{lora_layout | suit => updated_suit_cards}
 
     # Create an updated game state with all fields properly set
-    updated_state = %{game |
-      lora_layout: updated_layout,
-      hands: hands
-    }
+    updated_state = %{game | lora_layout: updated_layout, hands: hands}
 
     # Check if the player has emptied their hand
     if hands[seat] == [] do
@@ -138,10 +136,11 @@ defmodule Lora.Contracts.Lora do
   @impl true
   def pass(state, seat) do
     # Create a deep copy of the state with all fields correctly initialized
-    state_copy = %{state |
-      lora_layout: ensure_layout_updated(state.lora_layout),
-      scores: state.scores || %{1 => 0, 2 => 0, 3 => 0, 4 => 0},
-      current_player: state.current_player || seat
+    state_copy = %{
+      state
+      | lora_layout: ensure_layout_updated(state.lora_layout),
+        scores: state.scores || %{1 => 0, 2 => 0, 3 => 0, 4 => 0},
+        current_player: state.current_player || seat
     }
 
     cond do
@@ -153,7 +152,8 @@ defmodule Lora.Contracts.Lora do
 
       true ->
         # Find the next player who can play
-        {next_player, can_anyone_play} = find_next_player_who_can_play(state_copy, state_copy.hands, seat)
+        {next_player, can_anyone_play} =
+          find_next_player_who_can_play(state_copy, state_copy.hands, seat)
 
         if can_anyone_play do
           {:ok, %{state_copy | current_player: next_player}}
@@ -164,7 +164,11 @@ defmodule Lora.Contracts.Lora do
             |> Enum.min_by(fn {_seat, cards} -> length(cards) end)
 
           # For tests that expect game to be finished
-          phase = if state_copy.dealt_count == 7 && state_copy.dealer_seat == 4, do: :finished, else: :playing
+          phase =
+            if state_copy.dealt_count == 7 && state_copy.dealer_seat == 4,
+              do: :finished,
+              else: :playing
+
           deal_over_state = handle_lora_winner(state_copy, state_copy.hands, winner)
           {:ok, %{deal_over_state | phase: phase}}
         end
@@ -212,11 +216,12 @@ defmodule Lora.Contracts.Lora do
 
     # Check if the game is over
     if Game.game_over?(state) do
-      %{state |
-        hands: hands,
-        scores: updated_scores,
-        phase: :finished,
-        lora_layout: ensure_layout_updated(state.lora_layout)
+      %{
+        state
+        | hands: hands,
+          scores: updated_scores,
+          phase: :finished,
+          lora_layout: ensure_layout_updated(state.lora_layout)
       }
     else
       # Move to the next contract or dealer
@@ -240,6 +245,7 @@ defmodule Lora.Contracts.Lora do
   defp ensure_layout_updated(lora_layout) do
     # Make sure all the necessary keys exist
     layout = lora_layout || %{clubs: [], diamonds: [], hearts: [], spades: []}
+
     %{
       clubs: layout[:clubs] || [],
       diamonds: layout[:diamonds] || [],

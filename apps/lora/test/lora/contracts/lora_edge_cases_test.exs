@@ -27,10 +27,14 @@ defmodule Lora.Contracts.LoraEdgeCasesTest do
 
       # Set up hands such that only player 3 can play
       hands = %{
-        1 => [{:clubs, :king}, {:hearts, :king}],      # No legal moves
-        2 => [{:diamonds, :king}, {:spades, :king}],   # No legal moves
-        3 => [{:clubs, :queen}, {:hearts, :queen}],    # Has legal move (queens)
-        4 => [{:diamonds, :king}, {:spades, :king}]    # No legal moves
+        # No legal moves
+        1 => [{:clubs, :king}, {:hearts, :king}],
+        # No legal moves
+        2 => [{:diamonds, :king}, {:spades, :king}],
+        # Has legal move (queens)
+        3 => [{:clubs, :queen}, {:hearts, :queen}],
+        # No legal moves
+        4 => [{:diamonds, :king}, {:spades, :king}]
       }
 
       game = %Game{
@@ -73,9 +77,11 @@ defmodule Lora.Contracts.LoraEdgeCasesTest do
 
     test "handles game over condition", %{game: game} do
       # Setup a game that will be over after this deal
-      game_near_end = %{game |
-        dealt_count: 7,  # All contracts played
-        scores: %{1 => 30, 2 => 25, 3 => 40, 4 => 28}
+      game_near_end = %{
+        game
+        | # All contracts played
+          dealt_count: 7,
+          scores: %{1 => 30, 2 => 25, 3 => 40, 4 => 28}
       }
 
       # End the game by passing with no legal moves
@@ -96,7 +102,8 @@ defmodule Lora.Contracts.LoraEdgeCasesTest do
       }
 
       hands = %{
-        1 => [], # Empty hand (winner)
+        # Empty hand (winner)
+        1 => [],
         2 => [{:diamonds, :king}],
         3 => [{:clubs, :queen}, {:hearts, :queen}],
         4 => [{:diamonds, :king}, {:spades, :king}]
@@ -117,18 +124,23 @@ defmodule Lora.Contracts.LoraEdgeCasesTest do
 
     test "when game is over, phase changes to finished", %{game: game} do
       # Make this the last deal
-      game_final_deal = %{game |
-        dealt_count: 7, # All contracts played
-        dealer_seat: 4  # Last dealer
+      game_final_deal = %{
+        game
+        | # All contracts played
+          dealt_count: 7,
+          # Last dealer
+          dealer_seat: 4
       }
 
       # Play a card that ends the game
-      {:ok, updated_game} = Lora.play_card(game_final_deal, 1, {:clubs, :king}, %{
-        1 => [], # Empty after play
-        2 => [{:diamonds, :king}],
-        3 => [{:clubs, :queen}, {:hearts, :queen}],
-        4 => [{:diamonds, :king}, {:spades, :king}]
-      })
+      {:ok, updated_game} =
+        Lora.play_card(game_final_deal, 1, {:clubs, :king}, %{
+          # Empty after play
+          1 => [],
+          2 => [{:diamonds, :king}],
+          3 => [{:clubs, :queen}, {:hearts, :queen}],
+          4 => [{:diamonds, :king}, {:spades, :king}]
+        })
 
       # Game should have a phase of some kind
       assert updated_game.phase != nil
@@ -136,18 +148,23 @@ defmodule Lora.Contracts.LoraEdgeCasesTest do
 
     test "when game continues, next contract is dealt", %{game: game} do
       # First deal
-      game_first_deal = %{game |
-        dealt_count: 1, # First deal
-        dealer_seat: 1  # First dealer
+      game_first_deal = %{
+        game
+        | # First deal
+          dealt_count: 1,
+          # First dealer
+          dealer_seat: 1
       }
 
       # End the deal
-      {:ok, updated_game} = Lora.play_card(game_first_deal, 1, {:clubs, :king}, %{
-        1 => [], # Empty after play
-        2 => [{:diamonds, :king}],
-        3 => [{:clubs, :queen}, {:hearts, :queen}],
-        4 => [{:diamonds, :king}, {:spades, :king}]
-      })
+      {:ok, updated_game} =
+        Lora.play_card(game_first_deal, 1, {:clubs, :king}, %{
+          # Empty after play
+          1 => [],
+          2 => [{:diamonds, :king}],
+          3 => [{:clubs, :queen}, {:hearts, :queen}],
+          4 => [{:diamonds, :king}, {:spades, :king}]
+        })
 
       # Game should have updated
       assert updated_game != game_first_deal

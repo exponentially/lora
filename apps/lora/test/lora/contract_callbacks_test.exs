@@ -28,7 +28,8 @@ defmodule Lora.ContractCallbacksTest do
     def play_card(game, _seat, _card, _hands), do: {:ok, game}
 
     @impl true
-    def calculate_scores(_game, _taken, _hands, _dealer_seat), do: %{1 => 0, 2 => 0, 3 => 0, 4 => 0}
+    def calculate_scores(_game, _taken, _hands, _dealer_seat),
+      do: %{1 => 0, 2 => 0, 3 => 0, 4 => 0}
 
     @impl true
     def handle_deal_over(game, _taken, _hands, _dealer_seat), do: game
@@ -55,14 +56,14 @@ defmodule Lora.ContractCallbacksTest do
 
       # Should return them in the predefined order
       assert contracts == [
-        Minimum,
-        Maximum,
-        Queens,
-        Hearts,
-        JackOfClubs,
-        KingHeartsLastTrick,
-        LoraContract
-      ]
+               Minimum,
+               Maximum,
+               Queens,
+               Hearts,
+               JackOfClubs,
+               KingHeartsLastTrick,
+               LoraContract
+             ]
     end
 
     test "at/1 returns correct contract module for each valid index" do
@@ -94,14 +95,18 @@ defmodule Lora.ContractCallbacksTest do
       assert Contract.description(Minimum) == "Plus one point per trick taken"
       assert Contract.description(Maximum) == "Minus one point per trick taken"
       assert Contract.description(Queens) == "Plus two points per queen taken"
+
       assert Contract.description(Hearts) ==
-        "Plus one point per heart taken; minus eight if one player takes all hearts"
+               "Plus one point per heart taken; minus eight if one player takes all hearts"
+
       assert Contract.description(JackOfClubs) ==
-        "Plus eight points to the player who takes it"
+               "Plus eight points to the player who takes it"
+
       assert Contract.description(KingHeartsLastTrick) ==
-        "Plus four points each for King of Hearts and Last Trick; plus eight if captured in the same trick"
+               "Plus four points each for King of Hearts and Last Trick; plus eight if captured in the same trick"
+
       assert Contract.description(LoraContract) ==
-        "Minus eight to the first player who empties hand; all others receive plus one point per remaining card"
+               "Minus eight to the first player who empties hand; all others receive plus one point per remaining card"
     end
   end
 

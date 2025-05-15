@@ -104,7 +104,8 @@ defmodule Lora.ContractEdgeCasesTest do
     def play_card(game, _seat, _card, _hands), do: {:ok, game}
 
     @impl true
-    def calculate_scores(_game, _taken, _hands, _dealer_seat), do: %{1 => 0, 2 => 0, 3 => 0, 4 => 0}
+    def calculate_scores(_game, _taken, _hands, _dealer_seat),
+      do: %{1 => 0, 2 => 0, 3 => 0, 4 => 0}
 
     @impl true
     def handle_deal_over(game, _taken, _hands, _dealer_seat), do: game
@@ -120,7 +121,9 @@ defmodule Lora.ContractEdgeCasesTest do
   describe "Contract module with custom contract implementation" do
     test "Contract module functions work with custom implementation" do
       assert Contract.name(TestContractFull) == "Test Contract Full"
-      assert Contract.description(TestContractFull) == "Full implementation of contract behavior for testing"
+
+      assert Contract.description(TestContractFull) ==
+               "Full implementation of contract behavior for testing"
     end
   end
 end

@@ -30,6 +30,7 @@ defmodule Lora.GameSupervisorErrorsTest do
 
       # Mock the add_player function to simulate a failure
       :meck.new(GameServer, [:passthrough])
+
       :meck.expect(GameServer, :add_player, fn _game_id, _player_id, _player_name ->
         {:error, "Failed to add player"}
       end)
@@ -48,6 +49,7 @@ defmodule Lora.GameSupervisorErrorsTest do
     test "create_game_with_id handles failures from add_player" do
       # Mock the add_player function to simulate a failure
       :meck.new(GameServer, [:passthrough])
+
       :meck.expect(GameServer, :add_player, fn _game_id, _player_id, _player_name ->
         {:error, "Failed to add player"}
       end)
