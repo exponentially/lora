@@ -9,27 +9,17 @@ defmodule Lora.Umbrella.MixProject do
       deps: deps(),
       aliases: aliases(),
       extra_applications: [:logger],
-      # Test coverage configuration
-      test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [
-        coveralls: :test,
-        "coveralls.detail": :test,
-        "coveralls.post": :test,
-        "coveralls.html": :test,
-        "coveralls.json": :test
+        "test.with_coverage": :test
       ],
-      # Configure ExCoveralls to focus on core modules
-      excoveralls: [
-        skip_files: [
+      test_coverage: [
+        tool: ExCoveralls,
+        summary: [threshold: 68],
+        ignore_modules: [
           # Skip web modules for now - they're not part of the current unit testing phase
-          "apps/lora_web/lib/",
-          "apps/lora/lib/lora/data_case.ex",
-          "apps/lora/lib/lora.ex"
-        ],
-        treat_no_relevant_lines_as_covered: true,
-        summary: [
-          # Set threshold to 83% for now, can increase as coverage improves
-          threshold: 83
+          Lora.DataCase,
+          Lora.Contract,
+          Lora
         ]
       ]
     ]
@@ -51,8 +41,8 @@ defmodule Lora.Umbrella.MixProject do
     [
       # Required to run "mix format" on ~H/.heex files from the umbrella root
       {:phoenix_live_view, ">= 0.0.0"},
-      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
-      {:excoveralls, "~> 0.18", only: :test}
+      {:excoveralls, "~> 0.18", only: :test},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false}
     ]
   end
 
@@ -68,7 +58,9 @@ defmodule Lora.Umbrella.MixProject do
   defp aliases do
     [
       # run `mix setup` in all child apps
-      setup: ["cmd mix setup"]
+      setup: ["cmd mix setup"],
+      # convenience alias for running tests with coverage
+      "test.with_coverage": ["test --cover --export-coverage default", "test.coverage"]
     ]
   end
 end

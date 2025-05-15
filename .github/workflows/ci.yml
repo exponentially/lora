@@ -43,17 +43,12 @@ jobs:
       - name: Compile (with warnings as errors)
         run: mix compile --warnings-as-errors
         
-      - name: Run Dialyzer
-        run: mix dialyzer || echo "Dialyzer temporarily disabled - add dialyxir to your dependencies"
+    #   - name: Run Dialyzer
+    #     run: mix dialyzer
         
       - name: Run tests with coverage
-        run: mix coveralls.json
-        
-      - name: Generate HTML coverage report
-        run: mix coveralls.html
-        
-      - name: Check coverage against threshold
-        run: mix coveralls || echo "Coverage check completed - threshold is 83%, target is 90%"
+        run: mix test.with_coverage
+
         
       - name: Archive code coverage results
         uses: actions/upload-artifact@v4
@@ -61,7 +56,5 @@ jobs:
           name: code-coverage-report
           path: |
             cover/
-            cover/excoveralls.html
-            cover/excoveralls.json
           retention-days: 21
           

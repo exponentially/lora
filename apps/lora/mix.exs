@@ -14,7 +14,8 @@ defmodule Lora.MixProject do
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
-      test_coverage: [tool: ExCoveralls]
+      # test_coverage: [tool: ExCoveralls]
+      test_coverage: [tool: ExCoveralls, summary: [threshold: 90]]
     ]
   end
 
@@ -41,8 +42,7 @@ defmodule Lora.MixProject do
       {:phoenix_pubsub, "~> 2.1"},
       {:jason, "~> 1.2"},
       {:swoosh, "~> 1.5"},
-      {:finch, "~> 0.13"},
-      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false}
+      {:finch, "~> 0.13"}
     ]
   end
 

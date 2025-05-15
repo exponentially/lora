@@ -115,21 +115,27 @@ defmodule LoraWeb.CoreComponents do
       phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
       role="alert"
       class={[
-        "fixed top-2 right-2 mr-2 w-80 sm:w-96 z-50 rounded-lg p-3 ring-1",
-        @kind == :info && "bg-emerald-50 text-emerald-800 ring-emerald-500 fill-cyan-900",
-        @kind == :error && "bg-rose-50 text-rose-900 shadow-md ring-rose-500 fill-rose-900"
+        "alert gap-0 p-2",
+        @kind == :info && "alert-info",
+        @kind == :error && "alert-error bg-red-100 text-red-900"
       ]}
       {@rest}
     >
-      <p :if={@title} class="flex items-center gap-1.5 text-sm font-semibold leading-6">
-        <.icon :if={@kind == :info} name="hero-information-circle-mini" class="h-4 w-4" />
-        <.icon :if={@kind == :error} name="hero-exclamation-circle-mini" class="h-4 w-4" />
-        {@title}
-      </p>
-      <p class="mt-2 text-sm leading-5">{msg}</p>
-      <button type="button" class="group absolute top-1 right-1 p-2" aria-label={gettext("close")}>
-        <.icon name="hero-x-mark-solid" class="h-5 w-5 opacity-40 group-hover:opacity-70" />
-      </button>
+      <div class="card card-compact  w-80 sm:w-96">
+        <div class="card-body relative">
+          <h2 :if={@title} class="card-title">
+            <.icon :if={@kind == :info} name="hero-information-circle-mini text-black" class="h-6 w-6" />
+            <.icon :if={@kind == :error} name="hero-exclamation-circle-mini text-red-900" class="h-6 w-6" />
+            {@title}
+          </h2>
+          <p class="mt-2 text-sm leading-5">{msg}</p>
+          <button type="button" class="group absolute top-1 right-1 p-2" aria-label={gettext("close")}>
+            <.icon name="hero-x-mark-solid" class="h-5 w-5 opacity-40 group-hover:opacity-70" />
+          </button>
+        </div>
+      </div>
+
+
     </div>
     """
   end
@@ -146,7 +152,7 @@ defmodule LoraWeb.CoreComponents do
 
   def flash_group(assigns) do
     ~H"""
-    <div id={@id}>
+    <div id={@id} class="toast toast-top toast-end">
       <.flash kind={:info} title={gettext("Success!")} flash={@flash} />
       <.flash kind={:error} title={gettext("Error!")} flash={@flash} />
       <.flash
