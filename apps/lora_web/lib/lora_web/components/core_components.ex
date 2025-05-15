@@ -609,23 +609,23 @@ defmodule LoraWeb.CoreComponents do
     """
   end
 
-  @doc """
-  Game player information, renders score, name and presence. Also containes the flag if it is player turn.
-  """
-  attr :name, :string, required: true
-  attr :score, :integer, default: 0
-  attr :is_turn, :boolean, default: false
-  attr :is_online, :boolean, default: false
-  def player_plate(%{is_turn: is_turn} = assigns) do
-    assigns = assign(assigns, turn_class: if(not is_turn, do: "text-white", else: "text-yellow-400"))
-    ~H"""
-    <div class={"flex justify-between gap-2 p-2 " <> @turn_class}>
-      <span class="text-sm font-semibold leading-6 badge">{@score}</span>
-      <span class={"text-sm font-semibold leading-6 " <> @turn_class}>{@name}</span>
-      <span :if={@is_turn} class="loading loading-bars loading-md text-yellow-300"></span>
-    </div>
-    """
-  end
+  # @doc """
+  # Game player information, renders score, name and presence. Also containes the flag if it is player turn.
+  # """
+  # attr :name, :string, required: true
+  # attr :score, :integer, default: 0
+  # attr :is_turn, :boolean, default: false
+  # attr :is_online, :boolean, default: false
+  # def player_plate(%{is_turn: is_turn} = assigns) do
+  #   assigns = assign(assigns, turn_class: if(not is_turn, do: "text-white", else: "text-yellow-400"))
+  #   ~H"""
+  #   <div class={"flex justify-between gap-2 p-2 " <> @turn_class}>
+  #     <span class="text-sm font-semibold leading-6 badge">{@score}</span>
+  #     <span class={"text-sm font-semibold leading-6 " <> @turn_class}>{@name}</span>
+  #     <span :if={@is_turn} class="loading loading-bars loading-md text-yellow-300"></span>
+  #   </div>
+  #   """
+  # end
 
   ## JS Commands
 

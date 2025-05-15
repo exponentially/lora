@@ -6,6 +6,10 @@ defmodule LoraWeb.GameLive do
   alias Phoenix.PubSub
   alias Lora.{Contract}
   alias LoraWeb.Presence
+  import LoraWeb.PlayerComponents
+  import LoraWeb.CurrentPlayerComponents
+  import LoraWeb.CardUtils
+  import LoraWeb.GameUtils
 
   @impl true
   def mount(%{"id" => game_id}, session, socket) do
@@ -248,39 +252,11 @@ defmodule LoraWeb.GameLive do
 
   # View helper functions
 
-  def find_player_name(game, seat) do
-    game.players
-    |> Enum.find(fn p -> p.seat == seat end)
-    |> case do
-      nil -> "Unknown"
-      player -> player.name
-    end
-  end
+  # Player name finding moved to LoraWeb.GameUtils
 
-  def format_suit(suit) do
-    case suit do
-      :hearts -> "♥"
-      :diamonds -> "♦"
-      :clubs -> "♣"
-      :spades -> "♠"
-      _ -> suit
-    end
-  end
+  # Card formatting moved to LoraWeb.CardUtils
 
-  def format_rank(rank) do
-    case rank do
-      :ace -> "A"
-      :king -> "K"
-      :queen -> "Q"
-      :jack -> "J"
-      num -> num
-    end
-  end
-
-  # red
-  def suit_color(suit) when suit in [:hearts, :diamonds], do: "hearts"
-  # black
-  def suit_color(suit) when suit in [:clubs, :spades], do: "clubs"
+  # Card coloring moved to LoraWeb.CardUtils
 
   def find_winner(scores) do
     {winning_seat, _} = Enum.max_by(scores, fn {_seat, score} -> score end)

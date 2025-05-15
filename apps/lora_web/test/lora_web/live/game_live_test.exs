@@ -35,11 +35,18 @@ defmodule LoraWeb.GameLiveTest do
       conn = Phoenix.ConnTest.build_conn()
 
       # Connect to the game
-      {:ok, _view, html} = live(conn, "/game/#{game_id}")
+      {:ok, view, html} = live(conn, "/game/#{game_id}")
 
-      # Instead of expecting a redirect, verify the game initializes with default values
-      assert html =~ "Player: Unknown"
-      assert html =~ "Game: #{game_id}"
+      # Verify game shows waiting state
+      assert html =~ "Waiting for game to start"
+      # Verify that we've successfully loaded the game with dealer info
+      assert html =~ "Dealer: Empty Seat 1"
+      # Verify contract info is displayed
+      assert html =~ "Minimum"
+      assert html =~ "Plus one point per trick taken"
+      # Verify game phase is displayed
+      assert html =~ "Phase"
+      assert html =~ "lobby"
     end
   end
 end
