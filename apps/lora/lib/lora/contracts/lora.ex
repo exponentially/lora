@@ -5,9 +5,17 @@ defmodule Lora.Contracts.Lora do
   and all others score +1 point per card remaining in their hand.
   """
 
-  @behaviour Lora.Contracts.ContractBehaviour
+  @behaviour Lora.Contract
 
   alias Lora.{Game, Deck, Score}
+
+  @impl true
+  def name, do: "Lora"
+
+  @impl true
+  def description,
+    do:
+      "Minus eight to the first player who empties hand; all others receive plus one point per remaining card"
 
   @impl true
   def is_legal_move?(state, seat, {suit, rank}) do
@@ -87,16 +95,16 @@ defmodule Lora.Contracts.Lora do
 
   @impl true
   def can_pass?(state, seat) do
-    contract = Lora.Contract.at(state.contract_index)
-    contract == :lora && !has_legal_move?(state, seat)
+    contract_module = Lora.Contract.at(state.contract_index)
+    contract_module == Lora.Contracts.Lora && !has_legal_move?(state, seat)
   end
 
   @impl true
   def pass(state, seat) do
-    contract = Lora.Contract.at(state.contract_index)
+    contract_module = Lora.Contract.at(state.contract_index)
 
     cond do
-      contract != :lora ->
+      contract_module != Lora.Contracts.Lora ->
         {:error, "Can only pass in the Lora contract"}
 
       has_legal_move?(state, seat) ->

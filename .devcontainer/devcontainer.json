@@ -1,0 +1,28 @@
+{
+  "name": "Lora Card Game",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspace",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "jakebecker.elixir-ls",
+        "phoenixframework.phoenix",
+        "bradlc.vscode-tailwindcss",
+        "ms-azuretools.vscode-docker",
+        "hbenl.vscode-test-explorer",
+        "pantajoe.vscode-elixir-credo"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "jakebecker.elixir-ls",
+        "elixirLS.dialyzerEnabled": true,
+        "elixirLS.fetchDeps": true,
+        "elixirLS.suggestSpecs": true
+      }
+    }
+  },
+  "forwardPorts": [4000],
+  "postCreateCommand": "mix do deps.get, compile",
+  "remoteUser": "vscode"
+}

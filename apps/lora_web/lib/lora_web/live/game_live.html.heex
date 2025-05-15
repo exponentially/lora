@@ -12,7 +12,9 @@
               Game: {@game.id}
             </h1>
             <p class="mt-1 max-w-2xl text-sm text-gray-500">
-              {Contract.name(@current_contract)}: {Contract.description(@current_contract)}
+              {Lora.Contract.name(@current_contract)}: {Lora.Contract.description(
+                @current_contract
+              )}
             </p>
           </div>
           <div>

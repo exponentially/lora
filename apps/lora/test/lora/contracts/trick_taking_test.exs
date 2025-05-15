@@ -366,21 +366,6 @@ defmodule Lora.Contracts.TrickTakingTest do
     end
   end
 
-  describe "contract_module/1" do
-    test "returns the correct module for each contract type" do
-      assert TrickTaking.contract_module(:minimum) == Lora.Contracts.Minimum
-      assert TrickTaking.contract_module(:maximum) == Lora.Contracts.Maximum
-      assert TrickTaking.contract_module(:queens) == Lora.Contracts.Queens
-      assert TrickTaking.contract_module(:hearts) == Lora.Contracts.Hearts
-      assert TrickTaking.contract_module(:jack_of_clubs) == Lora.Contracts.JackOfClubs
-
-      assert TrickTaking.contract_module(:king_hearts_last_trick) ==
-               Lora.Contracts.KingHeartsLastTrick
-
-      assert TrickTaking.contract_module(:lora) == Lora.Contracts.Lora
-    end
-  end
-
   describe "flatten_taken_cards/1" do
     test "flattens nested trick structure" do
       # Given: Nested structure of taken cards

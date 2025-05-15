@@ -5,7 +5,6 @@ defmodule Lora.Game do
   """
 
   alias Lora.{Deck, Contract}
-  alias Lora.Contracts.TrickTaking
 
   @type player :: %{
           id: binary(),
@@ -160,9 +159,8 @@ defmodule Lora.Game do
             hand -- [card]
           end)
 
-        # Get the appropriate contract module and delegate to it
-        contract = Contract.at(state.contract_index)
-        contract_module = TrickTaking.contract_module(contract)
+        # Get the contract module directly and delegate to it
+        contract_module = Contract.at(state.contract_index)
         contract_module.play_card(state, seat, card, hands)
     end
   end
@@ -172,8 +170,7 @@ defmodule Lora.Game do
   """
   @spec pass_lora(t(), integer()) :: {:ok, t()} | {:error, binary()}
   def pass_lora(state, seat) do
-    contract = Contract.at(state.contract_index)
-    contract_module = TrickTaking.contract_module(contract)
+    contract_module = Contract.at(state.contract_index)
 
     cond do
       state.phase != :playing ->
@@ -228,8 +225,7 @@ defmodule Lora.Game do
   """
   @spec is_legal_move?(t(), integer(), Deck.card()) :: boolean()
   def is_legal_move?(state, seat, card) do
-    contract = Contract.at(state.contract_index)
-    contract_module = TrickTaking.contract_module(contract)
+    contract_module = Contract.at(state.contract_index)
     contract_module.is_legal_move?(state, seat, card)
   end
 

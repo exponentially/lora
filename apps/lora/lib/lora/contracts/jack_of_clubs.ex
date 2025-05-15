@@ -4,10 +4,16 @@ defmodule Lora.Contracts.JackOfClubs do
   In this contract, players score plus eight points if they take the Jack of Clubs.
   """
 
-  @behaviour Lora.Contracts.ContractBehaviour
+  @behaviour Lora.Contract
 
   alias Lora.Score
   alias Lora.Contracts.TrickTaking
+
+  @impl true
+  def name, do: "Jack of Clubs"
+
+  @impl true
+  def description, do: "Plus eight points to the player who takes it"
 
   @impl true
   def is_legal_move?(state, seat, card) do

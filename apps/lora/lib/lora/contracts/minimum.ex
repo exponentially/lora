@@ -4,10 +4,16 @@ defmodule Lora.Contracts.Minimum do
   In this contract, players score plus one point per trick taken.
   """
 
-  @behaviour Lora.Contracts.ContractBehaviour
+  @behaviour Lora.Contract
 
   alias Lora.Score
   alias Lora.Contracts.TrickTaking
+
+  @impl true
+  def name, do: "Minimum"
+
+  @impl true
+  def description, do: "Plus one point per trick taken"
 
   @impl true
   def is_legal_move?(state, seat, card) do

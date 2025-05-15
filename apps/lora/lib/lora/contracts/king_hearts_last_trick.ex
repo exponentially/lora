@@ -5,10 +5,18 @@ defmodule Lora.Contracts.KingHeartsLastTrick do
   plus eight if captured in the same trick.
   """
 
-  @behaviour Lora.Contracts.ContractBehaviour
+  @behaviour Lora.Contract
 
   alias Lora.Score
   alias Lora.Contracts.TrickTaking
+
+  @impl true
+  def name, do: "King of Hearts + Last Trick"
+
+  @impl true
+  def description,
+    do:
+      "Plus four points each for King of Hearts and Last Trick; plus eight if captured in the same trick"
 
   @impl true
   def is_legal_move?(state, seat, card) do
