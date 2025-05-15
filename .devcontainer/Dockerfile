@@ -1,4 +1,4 @@
-FROM elixir:1.17-slim
+FROM elixir:1.18-slim
 
 # Args for setting up non-root user 
 ARG USERNAME=vscode

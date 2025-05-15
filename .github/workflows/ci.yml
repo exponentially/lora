@@ -62,8 +62,8 @@ jobs:
     name: Build Release
     needs: test
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
-    
+    if: false # Temporarily disabled to avoid running on every push
+    # if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     env:
       MIX_ENV: prod
       
