@@ -28,7 +28,8 @@ defmodule Lora.Umbrella.MixProject do
         ],
         treat_no_relevant_lines_as_covered: true,
         summary: [
-          threshold: 83  # Set threshold to 83% for now, can increase as coverage improves
+          # Set threshold to 83% for now, can increase as coverage improves
+          threshold: 83
         ]
       ]
     ]

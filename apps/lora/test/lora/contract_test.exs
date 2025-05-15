@@ -67,11 +67,13 @@ defmodule Lora.ContractTest do
       # at/1 is already tested above for valid indices
       # Here we test edge cases that weren't covered
       assert_raise FunctionClauseError, fn ->
-        Contract.at(7)  # Invalid high index
+        # Invalid high index
+        Contract.at(7)
       end
 
       assert_raise FunctionClauseError, fn ->
-        Contract.at(-1)  # Invalid negative index
+        # Invalid negative index
+        Contract.at(-1)
       end
     end
   end
@@ -95,6 +97,7 @@ defmodule Lora.ContractTest do
       Enum.each(contracts, fn contract ->
         # Basic function existence tests
         assert function_exported?(contract, :play_card, 4)
+
         # Some modules might implement complete_trick differently, check if it exists but don't require it
         # assert function_exported?(contract, :complete_trick, 3)
         assert function_exported?(contract, :can_pass?, 2)

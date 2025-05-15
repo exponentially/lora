@@ -102,8 +102,8 @@ defmodule Lora.GameTest do
 
       # Card should be in the trick
       assert Enum.any?(new_game.trick, fn {seat, played_card} ->
-        seat == current_seat && played_card == card
-      end)
+               seat == current_seat && played_card == card
+             end)
     end
 
     test "play_card/3 fails when it's not the player's turn", %{game: game} do
@@ -121,11 +121,12 @@ defmodule Lora.GameTest do
 
       # We need to create a very specific test scenario
       # First, empty the player's hand and add specific cards
-      hands = Map.put(game.hands, current_seat, [
-        {:spades, :ace},
-        {:spades, :king},
-        {:diamonds, :ace}
-      ])
+      hands =
+        Map.put(game.hands, current_seat, [
+          {:spades, :ace},
+          {:spades, :king},
+          {:diamonds, :ace}
+        ])
 
       # Add a trick with a card played to establish a lead suit of spades
       trick = [{rem(current_seat + 1, 4) + 1, {:spades, :jack}}]

@@ -94,8 +94,9 @@ defmodule Lora.GameServerTest do
 
       # Test with any player just to ensure we get a valid response
       # The implementation might have changed and not return errors for non-current players
-      wrong_player = game_state.players
-                     |> Enum.find(fn p -> p.id != current_player_id end)
+      wrong_player =
+        game_state.players
+        |> Enum.find(fn p -> p.id != current_player_id end)
 
       # Just make sure calling legal_moves doesn't crash
       result = GameServer.legal_moves(game_id, wrong_player.id)
@@ -143,7 +144,11 @@ defmodule Lora.GameServerTest do
       }
     end
 
-    test "play_card/3 allows playing a card", %{game_id: game_id, current_player: current_player, card: card} do
+    test "play_card/3 allows playing a card", %{
+      game_id: game_id,
+      current_player: current_player,
+      card: card
+    } do
       # Play a card
       result = GameServer.play_card(game_id, current_player.id, card)
 
