@@ -8,21 +8,46 @@ defmodule LoraWeb.Router do
     plug :put_root_layout, html: {LoraWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
-    plug :ensure_player_id_generated
+    plug LoraWeb.Plugs.CurrentPlayer
   end
 
   pipeline :api do
     plug :accepts, ["json"]
   end
 
+  # Add authentication required pipeline
+  pipeline :auth_required do
+    plug LoraWeb.Plugs.RequireAuth
+  end
+
+  # Unauthenticated routes
   scope "/", LoraWeb do
     pipe_through :browser
 
     # Replace the default route with our lobby
-    live "/", LobbyLive, :index
+    live_session :default, on_mount: {LoraWeb.LiveAuth, :default} do
+      live "/", LobbyLive, :index
+    end
+  end
+
+  # Authentication routes
+  scope "/auth", LoraWeb do
+    pipe_through :browser
+
+    # Auth0 routes handled by Ueberauth
+    get "/:provider", AuthController, :request
+    get "/:provider/callback", AuthController, :callback
+    delete "/logout", AuthController, :delete
+  end
+
+  # Routes that require authentication
+  scope "/", LoraWeb do
+    pipe_through [:browser, :auth_required]
 
     # Game routes
-    live "/game/:id", GameLive, :show
+    live_session :authenticated, on_mount: {LoraWeb.LiveAuth, :default} do
+      live "/game/:id", GameLive, :show
+    end
   end
 
   # Other scopes may use custom stacks.
@@ -47,18 +72,4 @@ defmodule LoraWeb.Router do
     end
   end
 
-  # Ensure a player ID is generated and stored in the session
-  defp ensure_player_id_generated(conn, _opts) do
-    if get_session(conn, "player_id") do
-      conn
-    else
-      player_id = generate_player_id()
-      put_session(conn, "player_id", player_id)
-    end
-  end
-
-  # Generate a random player ID - used in both production and tests
-  defp generate_player_id do
-    :crypto.strong_rand_bytes(16) |> Base.encode16(case: :lower)
-  end
 end

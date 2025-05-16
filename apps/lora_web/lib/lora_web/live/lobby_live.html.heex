@@ -1,5 +1,43 @@
 <div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-md mt-10">
-  <h1 class="text-3xl font-bold text-center mb-6">Lora Card Game</h1>
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold text-center">Lora Card Game</h1>
+    
+    <%= if @current_player do %>
+      <div class="relative" x-data="{ open: false }" @click.away="open = false">
+        <button 
+          @click="open = !open" 
+          class="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900"
+        >
+          <span class="mr-1"><%= @current_player.name %></span>
+          <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+          </svg>
+        </button>
+        <div 
+          x-show="open" 
+          class="absolute right-0 mt-2 py-2 w-48 bg-white rounded-md shadow-lg z-10"
+          x-transition:enter="transition ease-out duration-100"
+          x-transition:enter-start="transform opacity-0 scale-95"
+          x-transition:enter-end="transform opacity-100 scale-100"
+        >
+          <.link 
+            href={~p"/auth/logout"} 
+            method="delete" 
+            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+          >
+            Sign Out
+          </.link>
+        </div>
+      </div>
+    <% else %>
+      <.link 
+        href={~p"/auth/auth0"} 
+        class="text-indigo-600 hover:text-indigo-800 font-medium"
+      >
+        Sign In
+      </.link>
+    <% end %>
+  </div>
 
   <%= if @error_message do %>
     <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -10,25 +48,19 @@
   <div class="grid grid-cols-1 gap-6 mb-4">
     <div class="border-b pb-4">
       <h2 class="text-xl font-semibold mb-4">Create a New Game</h2>
+      
+      <%= if @current_player do %>
+        <div class="mb-4">
+          <p class="text-sm text-gray-600">You'll join as: <span class="font-medium"><%= @current_player.name %></span></p>
+        </div>
+      <% end %>
+      
       <.form
-        :let={f}
         id="create-game-form"
         for={%{}}
-        as={:create_player}
         phx-submit="create_game"
-        phx-change="validate"
         class="space-y-4"
       >
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Your Name</label>
-          <.input
-            field={f[:name]}
-            value={@player_name}
-            placeholder="Enter your name"
-            required={true}
-            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          />
-        </div>
         <div>
           <.button
             type="submit"
@@ -42,6 +74,13 @@
 
     <div>
       <h2 class="text-xl font-semibold mb-4">Join an Existing Game</h2>
+      
+      <%= if @current_player do %>
+        <div class="mb-4">
+          <p class="text-sm text-gray-600">You'll join as: <span class="font-medium"><%= @current_player.name %></span></p>
+        </div>
+      <% end %>
+      
       <.form
         :let={f}
         id="join-game-form"
@@ -51,16 +90,6 @@
         phx-change="validate"
         class="space-y-4"
       >
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Your Name</label>
-          <.input
-            field={f[:name]}
-            value={@player_name}
-            placeholder="Enter your name"
-            required={true}
-            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          />
-        </div>
         <div>
           <label class="block text-sm font-medium text-gray-700">Game Code</label>
           <.input

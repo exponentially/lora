@@ -12,14 +12,16 @@ defmodule LoraWeb.GameLive do
   import LoraWeb.GameUtils
 
   @impl true
-  def mount(%{"id" => game_id}, session, socket) do
-    player_id = Map.fetch!(session, "player_id")
-    player_name = session["player_name"] || player_id
+  def mount(%{"id" => game_id}, _session, socket) do
+    # Get player info from the current_player assign (set by RequireAuth plug)
+    current_player = socket.assigns[:current_player]
 
-    if is_nil(player_id) do
-      Logger.error("Missing player information in session or socket assigns")
+    if is_nil(current_player) do
+      Logger.error("Missing player information in socket assigns")
       {:ok, redirect_to_lobby(socket, "Missing player information")}
     else
+      player_id = current_player.sub
+      player_name = current_player.name
       if connected?(socket) do
         # Subscribe to game updates
         PubSub.subscribe(Lora.PubSub, "game:#{game_id}")

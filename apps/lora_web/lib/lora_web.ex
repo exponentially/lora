@@ -55,6 +55,7 @@ defmodule LoraWeb do
       use Phoenix.LiveView,
         layout: {LoraWeb.Layouts, :app}
 
+      on_mount {LoraWeb.LiveAuth, :default}
       unquote(html_helpers())
     end
   end
