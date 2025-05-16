@@ -41,13 +41,13 @@ defmodule LoraWeb.PlayerComponents do
         :outer_class,
         case assigns.size do
           "small" ->
-            "bg-white/90 rounded-lg px-4 py-3 mb-4 shadow-xl backdrop-blur-md border border-white/30 w-full"
+            "bg-gray-900/80 rounded-lg px-4 py-2 mb-4 shadow-xl backdrop-blur-md border border-gray-700/50 w-full"
 
           "medium" ->
-            "bg-white/90 rounded-lg px-5 py-3 mb-4 shadow-xl backdrop-blur-md border border-white/30 w-80"
+            "bg-gray-900/80 rounded-lg px-5 py-2 mb-4 shadow-xl backdrop-blur-md border border-gray-700/50 w-80"
 
           "large" ->
-            "bg-white/90 rounded-lg px-5 py-4 mb-4 shadow-xl backdrop-blur-md border border-white/30 w-full"
+            "bg-gray-900/80 rounded-lg px-5 py-3 mb-4 shadow-xl backdrop-blur-md border border-gray-700/50 w-full"
         end
       )
 
@@ -56,9 +56,9 @@ defmodule LoraWeb.PlayerComponents do
         assigns,
         :name_class,
         case assigns.size do
-          "small" -> "text-base font-bold text-gray-800"
-          "medium" -> "text-lg font-bold text-gray-800"
-          "large" -> "text-xl font-bold text-gray-800"
+          "small" -> "text-base font-bold text-white"
+          "medium" -> "text-lg font-bold text-white"
+          "large" -> "text-xl font-bold text-white"
         end
       )
 
@@ -67,9 +67,9 @@ defmodule LoraWeb.PlayerComponents do
         assigns,
         :score_box_class,
         case assigns.size do
-          "small" -> "bg-indigo-100 px-2 py-1.5 rounded-lg border border-indigo-200"
-          "medium" -> "bg-indigo-100 px-3 py-2 rounded-lg border border-indigo-200"
-          "large" -> "bg-indigo-100 px-4 py-2.5 rounded-lg border border-indigo-200"
+          "small" -> "bg-gray-800 px-2 py-1.5 rounded-lg border border-gray-700"
+          "medium" -> "bg-gray-800 px-3 py-2 rounded-lg border border-gray-700"
+          "large" -> "bg-gray-800 px-4 py-2.5 rounded-lg border border-gray-700"
         end
       )
 
@@ -78,9 +78,9 @@ defmodule LoraWeb.PlayerComponents do
         assigns,
         :score_text_class,
         case assigns.size do
-          "small" -> "text-base font-bold text-indigo-700"
-          "medium" -> "text-xl font-bold text-indigo-700"
-          "large" -> "text-2xl font-bold text-indigo-700"
+          "small" -> "text-base font-bold text-white"
+          "medium" -> "text-xl font-bold text-white"
+          "large" -> "text-2xl font-bold text-white"
         end
       )
 
@@ -143,18 +143,27 @@ defmodule LoraWeb.PlayerComponents do
   def card_stack(assigns) do
     assigns =
       assigns
+      |> assign(:hand, Map.get(assigns.game.hands, assigns.player_seat, []))
       |> assign(:hand_size, length(Map.get(assigns.game.hands, assigns.player_seat, [])))
       |> assign_stack_styles()
 
     ~H"""
     <%= if assigns.game.phase == :playing do %>
-      <div class={"relative #{@width} #{@height}"}>
-        <div class={"absolute top-0 left-0 #{@card_height} #{@card_width} bg-gradient-to-br from-blue-800 to-blue-900 rounded-lg shadow-xl border border-blue-700 transform -rotate-6"}>
-        </div>
-        <div class={"absolute top-0 #{@spacing} #{@card_height} #{@card_width} bg-gradient-to-br from-blue-800 to-blue-900 rounded-lg shadow-xl border border-blue-700 transform -rotate-3"}>
-        </div>
-        <div class={"absolute top-0 #{@spacing} #{@spacing} #{@card_height} #{@card_width} bg-gradient-to-br from-blue-800 to-blue-900 rounded-lg shadow-xl border border-blue-700 flex items-center justify-center"}>
-          <span class={"#{@text_size} font-bold text-white select-none"}>{@hand_size}</span>
+      <div class={"relative #{@width} overflow-x-auto"}>
+        <div class="flex">
+          <%= for {{suit, rank}, index} <- Enum.with_index(@hand) do %>
+            <div
+              class={"card-stacked relative #{@card_height} #{@card_width} bg-white rounded-lg shadow-xl border border-gray-200 flex items-center justify-center #{LoraWeb.CardUtils.suit_color(suit)}"}
+              style={"margin-left: #{if index == 0, do: "0px", else: "-55px"}; z-index: #{index}"}>
+              <span class="text-lg font-bold">{LoraWeb.CardUtils.format_rank(rank)}{LoraWeb.CardUtils.format_suit(suit)}</span>
+              <span class="absolute top-1 left-1 text-sm">
+                {LoraWeb.CardUtils.format_rank(rank)}{LoraWeb.CardUtils.format_suit(suit)}
+              </span>
+              <span class="absolute bottom-1 right-1 text-sm transform rotate-180">
+                {LoraWeb.CardUtils.format_rank(rank)}{LoraWeb.CardUtils.format_suit(suit)}
+              </span>
+            </div>
+          <% end %>
         </div>
       </div>
     <% end %>

@@ -100,7 +100,7 @@ defmodule LoraWeb.LobbyLive do
   @impl true
   def handle_event(
         "join_game",
-        %{"join_player" => %{"game_code" => game_code}},
+        %{"join_game" => %{"game_code" => game_code}},
         socket
       ) do
     game_code = String.trim(game_code)

@@ -608,43 +608,6 @@ defmodule LoraWeb.CoreComponents do
     """
   end
 
-  @doc """
-  Game player information, renders score, name and presence. Also contains the flag if it is player turn.
-  """
-  attr :name, :string, required: true
-  attr :score, :integer, default: 0
-  attr :is_turn, :boolean, default: false
-  attr :is_online, :boolean, default: false
-
-  def player_plate(assigns) do
-    ~H"""
-    <div class={[
-      "card card-compact",
-      @is_turn && "bg-warning bg-opacity-20 shadow-lg",
-      !@is_turn && "bg-base-200"
-    ]}>
-      <div class="card-body p-3">
-        <div class="flex justify-between items-center">
-          <div class="badge badge-primary badge-lg"><%= @score %></div>
-          <h3 class={[
-            "font-medium",
-            @is_turn && "text-warning-content font-bold",
-            !@is_turn && "text-base-content"
-          ]}>
-            <%= @name %>
-            <%= if @is_online do %>
-              <span class="badge badge-success badge-sm ml-1">Online</span>
-            <% end %>
-          </h3>
-          <%= if @is_turn do %>
-            <div class="loading loading-spinner loading-sm text-warning"></div>
-          <% end %>
-        </div>
-      </div>
-    </div>
-    """
-  end
-
   ## JS Commands
 
   def show(js \\ %JS{}, selector) do
