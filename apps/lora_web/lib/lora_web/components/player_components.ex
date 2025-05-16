@@ -149,18 +149,24 @@ defmodule LoraWeb.PlayerComponents do
 
     ~H"""
     <%= if assigns.game.phase == :playing do %>
-      <div class={"relative #{@width} overflow-x-auto"}>
-        <div class="flex">
+      <div class={"relative #{@width} overflow-visible #{@player_position}"}>
+        <div class={"card-fan size-#{@size} flex justify-center"} style="min-height: #{@fanHeight}px;">
           <%= for {{suit, rank}, index} <- Enum.with_index(@hand) do %>
             <div
-              class={"card-stacked relative #{@card_height} #{@card_width} bg-white rounded-lg shadow-xl border border-gray-200 flex items-center justify-center #{LoraWeb.CardUtils.suit_color(suit)}"}
-              style={"margin-left: #{if index == 0, do: "0px", else: "-55px"}; z-index: #{index}"}>
-              <span class="text-lg font-bold">{LoraWeb.CardUtils.format_rank(rank)}{LoraWeb.CardUtils.format_suit(suit)}</span>
-              <span class="absolute top-1 left-1 text-sm">
-                {LoraWeb.CardUtils.format_rank(rank)}{LoraWeb.CardUtils.format_suit(suit)}
+              class={"card-stacked relative #{@card_height} #{@card_width} rounded-lg border-2 flex items-center justify-center #{LoraWeb.CardUtils.suit_color(suit)}"}
+              style={"z-index: #{index + 10};"}>
+              <div class={"card-value text-#{@value_size} #{LoraWeb.CardUtils.suit_color(suit)}"}>
+                {LoraWeb.CardUtils.format_suit(suit)}
+              </div>
+              <span class={"card-corner top-left font-bold text-#{@corner_size} #{LoraWeb.CardUtils.suit_color(suit)}"}>
+                <span class="card-rank">{LoraWeb.CardUtils.format_rank(rank)}</span>
+                <br />
+                <span class="card-suit">{LoraWeb.CardUtils.format_suit(suit)}</span>
               </span>
-              <span class="absolute bottom-1 right-1 text-sm transform rotate-180">
-                {LoraWeb.CardUtils.format_rank(rank)}{LoraWeb.CardUtils.format_suit(suit)}
+              <span class={"card-corner bottom-right font-bold text-#{@corner_size} #{LoraWeb.CardUtils.suit_color(suit)}"}>
+                <span class="card-rank">{LoraWeb.CardUtils.format_rank(rank)}</span>
+                <br />
+                <span class="card-suit">{LoraWeb.CardUtils.format_suit(suit)}</span>
               </span>
             </div>
           <% end %>
@@ -171,33 +177,50 @@ defmodule LoraWeb.PlayerComponents do
   end
 
   defp assign_stack_styles(assigns) do
+    # Determine player position based on seat
+    player_position = cond do
+      assigns.player_seat == 0 -> "bottom-player"
+      assigns.player_seat == 1 -> "left-player"
+      assigns.player_seat == 2 -> "top-player"
+      assigns.player_seat == 3 -> "right-player"
+      true -> ""
+    end
+
+    assigns = assign(assigns, :player_position, player_position)
+
     case assigns.size do
       "small" ->
         assigns
-        |> assign(:width, "w-24")
-        |> assign(:height, "h-24")
-        |> assign(:card_width, "w-16")
-        |> assign(:card_height, "h-24")
-        |> assign(:text_size, "text-lg")
-        |> assign(:spacing, "left-3")
+        |> assign(:width, "w-full")  # Full width for better flexibility
+        |> assign(:height, "h-36")
+        |> assign(:card_width, "w-24")
+        |> assign(:card_height, "h-36")
+        |> assign(:text_size, "text-xl")
+        |> assign(:corner_size, "base")  # Larger corner text for better visibility
+        |> assign(:value_size, "xl")
+        |> assign(:fanHeight, 180)
 
       "medium" ->
         assigns
-        |> assign(:width, "w-32")
-        |> assign(:height, "h-28")
-        |> assign(:card_width, "w-20")
-        |> assign(:card_height, "h-28")
+        |> assign(:width, "w-full")  # Full width for better flexibility
+        |> assign(:height, "h-44")
+        |> assign(:card_width, "w-28")
+        |> assign(:card_height, "h-44")
         |> assign(:text_size, "text-2xl")
-        |> assign(:spacing, "left-6")
+        |> assign(:corner_size, "lg")  # Larger corner text for better visibility
+        |> assign(:value_size, "2xl")
+        |> assign(:fanHeight, 220)
 
       "large" ->
         assigns
-        |> assign(:width, "w-36")
-        |> assign(:height, "h-32")
-        |> assign(:card_width, "w-24")
-        |> assign(:card_height, "h-32")
+        |> assign(:width, "w-full")  # Full width for better flexibility
+        |> assign(:height, "h-52")
+        |> assign(:card_width, "w-32")
+        |> assign(:card_height, "h-52")
         |> assign(:text_size, "text-3xl")
-        |> assign(:spacing, "left-8")
+        |> assign(:corner_size, "xl")  # Larger corner text for better visibility
+        |> assign(:value_size, "3xl")
+        |> assign(:fanHeight, 260)
     end
   end
 end
