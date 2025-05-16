@@ -343,13 +343,7 @@ defmodule LoraWeb.CoreComponents do
     ~H"""
     <div>
       <.label for={@id}>{@label}</.label>
-      <select
-        id={@id}
-        name={@name}
-        class="select select-bordered w-full"
-        multiple={@multiple}
-        {@rest}
-      >
+      <select id={@id} name={@name} class="select select-bordered w-full" multiple={@multiple} {@rest}>
         <option :if={@prompt} value="">{@prompt}</option>
         {Phoenix.HTML.Form.options_for_select(@options, @value)}
       </select>

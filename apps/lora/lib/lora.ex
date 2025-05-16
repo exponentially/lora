@@ -140,7 +140,9 @@ defmodule Lora do
     end)
     |> Enum.map(fn {id, game} ->
       player = Enum.find(game.players, fn p -> p.id == player_id end)
-      opponent_names = game.players
+
+      opponent_names =
+        game.players
         |> Enum.reject(fn p -> p.id == player_id end)
         |> Enum.map(& &1.name)
 
@@ -149,8 +151,11 @@ defmodule Lora do
         players: Enum.map(game.players, & &1.name),
         player_count: length(game.players),
         playing: game.phase != :lobby,
-        last_activity: Map.get(game, :last_activity, Map.get(game, :created_at, DateTime.utc_now())),
-        your_turn: Map.get(game, :current_player_idx, nil) == Enum.find_index(game.players, fn p -> p.id == player_id end),
+        last_activity:
+          Map.get(game, :last_activity, Map.get(game, :created_at, DateTime.utc_now())),
+        your_turn:
+          Map.get(game, :current_player_idx, nil) ==
+            Enum.find_index(game.players, fn p -> p.id == player_id end),
         your_cards: Map.get(player, :hand, []),
         opponents: opponent_names,
         created_at: Map.get(game, :created_at, DateTime.utc_now())

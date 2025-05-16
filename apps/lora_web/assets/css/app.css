@@ -4,3 +4,19 @@
 @import "./card_fan.css";
 
 /* This file is for your main application CSS */
+
+/* radial gradient startting from primary content  color toward predefeind table color  */
+.bg-raidal-spotlight {
+    background:
+        radial-gradient(
+            circle at 40% 50%,
+            theme("colors.table") 20%,
+            transparent 80%,
+            transparent
+        ),
+        linear-gradient(
+            transparent,
+            transparent 50%,
+            theme("colors.table") 100%
+        );
+}

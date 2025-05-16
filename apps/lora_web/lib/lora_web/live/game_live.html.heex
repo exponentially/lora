@@ -1,4 +1,4 @@
-<div class="min-h-screen w-full bg-gradient-to-br from-primary-content to-success p-6">
+<div class="min-h-screen w-full bg-raidal-spotlight p-6">
   <%= if @loading do %>
     <div class="text-center py-24">
       <div class="inline-flex items-center px-6 py-3 bg-white/20 backdrop-blur-md rounded-xl">
@@ -91,7 +91,10 @@
                 </div>
                 
 <!-- Center - Current trick or Lora layout -->
-                <div class="w-2/4 bg-green-900/70 backdrop-blur-md rounded-xl shadow-2xl p-4 min-h-[320px] border border-emerald-700/50">
+                <div
+                  class="bg-green-900/1 rounded-full backdrop-blur-md shadow-[0_50px_60px_-15px_rgba(0,0,0,0.3)] p-4 size-[520px]"
+                  style="transform: rotate3d(-1,0.5,0.5,60deg);"
+                >
                   <%= if @current_contract == :lora do %>
                     <div class="text-white text-center font-semibold mb-3">Lora Layout</div>
                     <div class="grid grid-cols-1 gap-3">
@@ -110,24 +113,47 @@
                     </div>
                   <% else %>
                     <div class="text-white text-center font-semibold mb-3">Current Trick</div>
-                    <div class="grid grid-cols-2 grid-rows-2 gap-6 h-full py-4">
-                      <%= for seat <- 1..4 do %>
-                        <div class="flex items-center justify-center">
-                          <% trick_card = Enum.find(@game.trick, fn {s, _} -> s == seat end) %>
-                          <%= if trick_card do %>
-                            <% {_, {suit, rank}} = trick_card %>
-                            <div class={"card flex items-center justify-center h-28 w-20 bg-white rounded-lg shadow-2xl #{suit_color(suit)}"}>
-                              <span class="text-2xl font-bold">{format_rank(rank)}</span>
-                              <span class="absolute top-1 left-1 text-sm">
-                                {format_suit(suit)}
-                              </span>
-                              <span class="absolute bottom-1 right-1 text-sm transform rotate-180">
-                                {format_suit(suit)}
-                              </span>
-                            </div>
-                          <% end %>
-                        </div>
-                      <% end %>
+                    <div class="relative h-full py-4">
+                      <% opponent_seats = LoraWeb.GameUtils.calculate_opponent_seats(@player.seat) %>
+                      
+<!-- Bottom/Player's card (current player) -->
+                      <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+                        <% trick_card = Enum.find(@game.trick, fn {s, _} -> s == @player.seat end) %>
+                        <%= if trick_card do %>
+                          <% {_, {suit, rank}} = trick_card %>
+                          <.card_front suit={suit} rank={rank} class="z-1" />
+                        <% end %>
+                      </div>
+                      
+<!-- Top opponent's card -->
+                      <div class="absolute top-4 left-1/2 transform -translate-x-1/2">
+                        <% trick_card =
+                          Enum.find(@game.trick, fn {s, _} -> s == opponent_seats.top end) %>
+                        <%= if trick_card do %>
+                          <% {_, {suit, rank}} = trick_card %>
+                          <.card_front suit={suit} rank={rank} class="z-1" />
+                        <% end %>
+                      </div>
+                      
+<!-- Left opponent's card -->
+                      <div class="absolute top-1/2 left-4 transform -translate-y-1/2">
+                        <% trick_card =
+                          Enum.find(@game.trick, fn {s, _} -> s == opponent_seats.left end) %>
+                        <%= if trick_card do %>
+                          <% {_, {suit, rank}} = trick_card %>
+                          <.card_front suit={suit} rank={rank} class="z-1" />
+                        <% end %>
+                      </div>
+                      
+<!-- Right opponent's card -->
+                      <div class="absolute top-1/2 right-4 transform -translate-y-1/2">
+                        <% trick_card =
+                          Enum.find(@game.trick, fn {s, _} -> s == opponent_seats.right end) %>
+                        <%= if trick_card do %>
+                          <% {_, {suit, rank}} = trick_card %>
+                          <.card_front suit={suit} rank={rank} class="z-1" />
+                        <% end %>
+                      </div>
                     </div>
                   <% end %>
                 </div>

@@ -19,7 +19,7 @@ defmodule LoraWeb.AuthTest do
     credentials: %{
       token: "abc123",
       expires: true,
-      expires_at: 1622222222,
+      expires_at: 1_622_222_222,
       refresh_token: "def456"
     },
     extra: %{}
@@ -34,9 +34,8 @@ defmodule LoraWeb.AuthTest do
   describe "auth flow" do
     test "successful authentication redirects to the requested route", %{conn: conn} do
       # Simulate Auth0 callback
-      with_mock Ueberauth.Strategy.Auth0, [
-        handle_callback!: fn _conn -> @auth0_response end
-      ] do
+      with_mock Ueberauth.Strategy.Auth0,
+        handle_callback!: fn _conn -> @auth0_response end do
         conn =
           conn
           |> Plug.Test.init_test_session(%{})
@@ -69,7 +68,14 @@ defmodule LoraWeb.AuthTest do
 
     test "logout removes the player from ETS and session", %{conn: conn} do
       # Setup a player in the system
-      player = %Player{id: "test-id", sub: "test-id", name: "Test User", email: "test@example.com", inserted_at: DateTime.utc_now()}
+      player = %Player{
+        id: "test-id",
+        sub: "test-id",
+        name: "Test User",
+        email: "test@example.com",
+        inserted_at: DateTime.utc_now()
+      }
+
       {:ok, _} = Accounts.store_player(player)
 
       # Logout with a session containing the player_id
@@ -100,15 +106,21 @@ defmodule LoraWeb.AuthTest do
 
     test "authenticated users can access protected routes", %{conn: conn} do
       # Setup a player in the system
-      player = %Player{id: "test-id", sub: "test-id", name: "Test User", email: "test@example.com", inserted_at: DateTime.utc_now()}
+      player = %Player{
+        id: "test-id",
+        sub: "test-id",
+        name: "Test User",
+        email: "test@example.com",
+        inserted_at: DateTime.utc_now()
+      }
+
       {:ok, _} = Accounts.store_player(player)
 
       # Mock the game exists function to allow the request
-      with_mock Lora, [
+      with_mock Lora,
         get_game_state: fn _game_id -> {:ok, %{players: []}} end,
         player_reconnect: fn _game_id, _player_id, _pid -> :ok end,
-        add_player: fn _game_id, _player_id, _player_name -> {:ok, %{players: []}} end
-      ] do
+        add_player: fn _game_id, _player_id, _player_name -> {:ok, %{players: []}} end do
         conn =
           conn
           |> Plug.Test.init_test_session(%{"player_id" => "test-id"})

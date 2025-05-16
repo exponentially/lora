@@ -42,7 +42,11 @@ config :ueberauth, Ueberauth,
 config :ueberauth, Ueberauth.Strategy.Auth0.OAuth,
   domain: System.get_env("AUTH0_DOMAIN", "tri-mudraca-dev.eu.auth0.com"),
   client_id: System.get_env("AUTH0_CLIENT_ID", "ty88vQoOuTjekRCQPalFDsnK0eL0gyog"),
-  client_secret: System.get_env("AUTH0_CLIENT_SECRET", "8_I9bfVRxjbFekL8ZQkXGq6w23TdcT0juSBedoPeVtJaYYheO6wwy8pZ1L1sURfR")
+  client_secret:
+    System.get_env(
+      "AUTH0_CLIENT_SECRET",
+      "8_I9bfVRxjbFekL8ZQkXGq6w23TdcT0juSBedoPeVtJaYYheO6wwy8pZ1L1sURfR"
+    )
 
 # Configure esbuild (the version is required)
 config :esbuild,

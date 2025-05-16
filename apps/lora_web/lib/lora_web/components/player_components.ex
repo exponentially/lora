@@ -1,7 +1,9 @@
 defmodule LoraWeb.PlayerComponents do
+  alias ElixirLS.DebugAdapter
   use Phoenix.Component
   import LoraWeb.GameUtils
-
+  import LoraWeb.DeckCompoents
+  import LoraWeb.CoreComponents
   attr :player, :map, required: true
   attr :game, :map, required: true
   attr :presences, :map, required: true
@@ -100,32 +102,14 @@ defmodule LoraWeb.PlayerComponents do
       <div class="flex items-center justify-between">
         <div>
           <span class={@name_class <> " flex items-center gap-2"}>
-            {@player_name}
-            <%= if @is_online do %>
-              <span class={"inline-block #{@status_size} bg-green-500 rounded-full"} title="Online">
-              </span>
-            <% else %>
-              <span class={"inline-block #{@status_size} bg-red-500 rounded-full"} title="Offline">
-              </span>
+            <%= if @current_player do %>
+              <.icon name="hero-bookmark-solid" class="text-yellow-500" />
             <% end %>
+            <%= unless @is_online do %>
+              <span class="loading loading-ball loading-sm bg-red-500"></span>
+            <% end %>
+            <span class="line-clamp-1" title={@player_name}>{@player_name}</span>
           </span>
-          <%= if @current_player do %>
-            <span class="inline-flex items-center gap-1 mt-1 text-sm font-medium text-green-600">
-              <svg
-                class="h-4 w-4"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-              Current turn
-            </span>
-          <% end %>
         </div>
         <div class={@score_box_class}>
           <span class={@score_text_class}>{@score}</span>
@@ -146,29 +130,18 @@ defmodule LoraWeb.PlayerComponents do
       |> assign(:hand, Map.get(assigns.game.hands, assigns.player_seat, []))
       |> assign(:hand_size, length(Map.get(assigns.game.hands, assigns.player_seat, [])))
       |> assign_stack_styles()
+      |> assign(:debug, Mix.env() == :dev)
 
     ~H"""
     <%= if assigns.game.phase == :playing do %>
-      <div class={"relative #{@width} overflow-visible #{@player_position}"}>
+      <div class={"relative #{@width} overflow-visible"}>
         <div class={"card-fan size-#{@size} flex justify-center"} style="min-height: #{@fanHeight}px;">
           <%= for {{suit, rank}, index} <- Enum.with_index(@hand) do %>
-            <div
-              class={"card-stacked relative #{@card_height} #{@card_width} rounded-lg border-2 flex items-center justify-center #{LoraWeb.CardUtils.suit_color(suit)}"}
-              style={"z-index: #{index + 10};"}>
-              <div class={"card-value text-#{@value_size} #{LoraWeb.CardUtils.suit_color(suit)}"}>
-                {LoraWeb.CardUtils.format_suit(suit)}
-              </div>
-              <span class={"card-corner top-left font-bold text-#{@corner_size} #{LoraWeb.CardUtils.suit_color(suit)}"}>
-                <span class="card-rank">{LoraWeb.CardUtils.format_rank(rank)}</span>
-                <br />
-                <span class="card-suit">{LoraWeb.CardUtils.format_suit(suit)}</span>
-              </span>
-              <span class={"card-corner bottom-right font-bold text-#{@corner_size} #{LoraWeb.CardUtils.suit_color(suit)}"}>
-                <span class="card-rank">{LoraWeb.CardUtils.format_rank(rank)}</span>
-                <br />
-                <span class="card-suit">{LoraWeb.CardUtils.format_suit(suit)}</span>
-              </span>
-            </div>
+            <%= if @debug do %>
+              <.card_front suit={suit} rank={rank} class={"z-#{index}"} />
+            <% else %>
+              <.card_back class={"z-#{index}"} />
+            <% end %>
           <% end %>
         </div>
       </div>
@@ -177,50 +150,24 @@ defmodule LoraWeb.PlayerComponents do
   end
 
   defp assign_stack_styles(assigns) do
-    # Determine player position based on seat
-    player_position = cond do
-      assigns.player_seat == 0 -> "bottom-player"
-      assigns.player_seat == 1 -> "left-player"
-      assigns.player_seat == 2 -> "top-player"
-      assigns.player_seat == 3 -> "right-player"
-      true -> ""
-    end
-
-    assigns = assign(assigns, :player_position, player_position)
-
     case assigns.size do
       "small" ->
         assigns
-        |> assign(:width, "w-full")  # Full width for better flexibility
+        |> assign(:width, "w-full")
         |> assign(:height, "h-36")
-        |> assign(:card_width, "w-24")
-        |> assign(:card_height, "h-36")
-        |> assign(:text_size, "text-xl")
-        |> assign(:corner_size, "base")  # Larger corner text for better visibility
-        |> assign(:value_size, "xl")
         |> assign(:fanHeight, 180)
-
-      "medium" ->
-        assigns
-        |> assign(:width, "w-full")  # Full width for better flexibility
-        |> assign(:height, "h-44")
-        |> assign(:card_width, "w-28")
-        |> assign(:card_height, "h-44")
-        |> assign(:text_size, "text-2xl")
-        |> assign(:corner_size, "lg")  # Larger corner text for better visibility
-        |> assign(:value_size, "2xl")
-        |> assign(:fanHeight, 220)
 
       "large" ->
         assigns
-        |> assign(:width, "w-full")  # Full width for better flexibility
+        |> assign(:width, "w-full")
         |> assign(:height, "h-52")
-        |> assign(:card_width, "w-32")
-        |> assign(:card_height, "h-52")
-        |> assign(:text_size, "text-3xl")
-        |> assign(:corner_size, "xl")  # Larger corner text for better visibility
-        |> assign(:value_size, "3xl")
         |> assign(:fanHeight, 260)
+
+      _medium ->
+        assigns
+        |> assign(:width, "w-full")
+        |> assign(:height, "h-44")
+        |> assign(:fanHeight, 220)
     end
   end
 end

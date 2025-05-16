@@ -13,8 +13,7 @@ defmodule LoraWeb.CurrentPlayerComponents do
     ~H"""
     <div class={
       if assigns.game.current_player == assigns.player.seat,
-        do:
-          "bg-gray-900/80 backdrop-blur-md rounded-xl p-5 shadow-2xl border border-gray-700",
+        do: "bg-gray-900/80 backdrop-blur-md rounded-xl p-5 shadow-2xl border border-gray-700",
         else: "bg-gray-900/80 backdrop-blur-md rounded-xl p-5 shadow-2xl border border-gray-700"
     }>
       <!-- Player info -->
@@ -73,7 +72,7 @@ defmodule LoraWeb.CurrentPlayerComponents do
           </div>
         </div>
       </div>
-
+      
     <!-- Player hand - emphasized -->
       <h3 class="text-lg font-semibold text-center mb-4 text-gray-700">Your Hand</h3>
       <div class="overflow-x-auto pb-4">

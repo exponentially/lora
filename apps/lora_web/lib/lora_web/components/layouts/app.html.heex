@@ -3,11 +3,25 @@
     <div class="navbar-start">
       <div class="dropdown lg:hidden">
         <label tabindex="0" class="btn btn-ghost btn-circle">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h7"
+            />
           </svg>
         </label>
-        <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
+        <ul
+          tabindex="0"
+          class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52"
+        >
           <li><a href="/" class="text-base-content">Lobby</a></li>
           <li><a href="/rules" class="text-base-content">Rules</a></li>
         </ul>
@@ -23,7 +37,7 @@
         <li><a href="/rules" class="hover:bg-primary-focus">Rules</a></li>
       </ul>
     </div>
-    
+
     <div class="navbar-end">
       <%= if assigns[:current_player] do %>
         <div class="dropdown dropdown-end">
@@ -31,16 +45,18 @@
             <div class="avatar placeholder">
               <div class="w-10 rounded-full bg-secondary text-secondary-content">
                 <span class="text-lg font-bold">
-                  <%= String.slice(@current_player.name, 0, 1) |> String.upcase() %>
+                  {String.slice(@current_player.name, 0, 1) |> String.upcase()}
                 </span>
               </div>
             </div>
           </div>
-          <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
+          <ul
+            tabindex="0"
+            class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52"
+          >
             <li>
               <a class="justify-between">
-                Profile
-                <span class="badge badge-sm badge-secondary">Player</span>
+                Profile <span class="badge badge-sm badge-secondary">Player</span>
               </a>
             </li>
             <li>
@@ -49,10 +65,7 @@
           </ul>
         </div>
       <% else %>
-        <.link 
-          href={~p"/auth/auth0"} 
-          class="btn btn-sm btn-outline btn-accent"
-        >
+        <.link href={~p"/auth/auth0"} class="btn btn-sm btn-outline btn-accent">
           Sign In
         </.link>
       <% end %>

@@ -8,7 +8,8 @@ defmodule Lora.Accounts.ETSAdapter do
   require Logger
 
   @table_name :players
-  @expiry_time_seconds 30 * 60 # 30 minutes
+  # 30 minutes
+  @expiry_time_seconds 30 * 60
 
   @doc """
   Initialize the ETS table for players.
@@ -53,11 +54,14 @@ defmodule Lora.Accounts.ETSAdapter do
       error ->
         error
     end
-  end  # Schedule a periodic cleanup of expired sessions
+  end
+
+  # Schedule a periodic cleanup of expired sessions
   defp schedule_cleanup do
     # Since we're not a GenServer, we'll use a Task instead
     Task.start(fn ->
-      Process.sleep(60_000) # Wait 1 minute
+      # Wait 1 minute
+      Process.sleep(60_000)
       cleanup_expired_players()
       schedule_cleanup()
     end)
@@ -75,6 +79,7 @@ defmodule Lora.Accounts.ETSAdapter do
           Logger.info("Removing expired player session for #{player.name}")
           :ets.delete(@table_name, id)
         end
+
         acc
       end,
       nil,

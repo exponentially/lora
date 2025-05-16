@@ -9,15 +9,17 @@ defmodule LoraWeb.LobbyLive do
   def mount(_params, _session, socket) do
     # At this point, LiveAuth hook has already assigned :current_player
     player_id = if socket.assigns.current_player, do: socket.assigns.current_player.sub, else: nil
-    player_name = if socket.assigns.current_player, do: socket.assigns.current_player.name, else: ""
+
+    player_name =
+      if socket.assigns.current_player, do: socket.assigns.current_player.name, else: ""
 
     # Get open games list
-    open_games = Lora.list_open_games() |> Enum.sort_by(&(&1.created_at), :desc)
+    open_games = Lora.list_open_games() |> Enum.sort_by(& &1.created_at, :desc)
 
     # Get player's active games if logged in
     active_games =
       if player_id do
-        Lora.list_player_active_games(player_id) |> Enum.sort_by(&(&1.last_activity), :desc)
+        Lora.list_player_active_games(player_id) |> Enum.sort_by(& &1.last_activity, :desc)
       else
         []
       end
@@ -41,16 +43,17 @@ defmodule LoraWeb.LobbyLive do
     player_id = if socket.assigns.current_player, do: socket.assigns.current_player.sub, else: nil
 
     # Get updated game lists
-    open_games = Lora.list_open_games() |> Enum.sort_by(&(&1.created_at), :desc)
+    open_games = Lora.list_open_games() |> Enum.sort_by(& &1.created_at, :desc)
 
     active_games =
       if player_id do
-        Lora.list_player_active_games(player_id) |> Enum.sort_by(&(&1.last_activity), :desc)
+        Lora.list_player_active_games(player_id) |> Enum.sort_by(& &1.last_activity, :desc)
       else
         []
       end
 
-    socket = socket
+    socket =
+      socket
       |> assign(:open_games, open_games)
       |> assign(:active_games, active_games)
 
@@ -74,7 +77,8 @@ defmodule LoraWeb.LobbyLive do
         IO.puts("No current player, redirecting to Auth0 with state: #{state}")
         {:noreply, redirect(socket, to: "/auth/auth0?state=#{state}")}
 
-      is_map(current_player) && Map.has_key?(current_player, :sub) && Map.has_key?(current_player, :name) ->
+      is_map(current_player) && Map.has_key?(current_player, :sub) &&
+          Map.has_key?(current_player, :name) ->
         player_id = current_player.sub
         name = current_player.name
 
@@ -93,7 +97,11 @@ defmodule LoraWeb.LobbyLive do
       true ->
         # Handle case where current_player is defined but incomplete
         IO.puts("Invalid current_player data structure: #{inspect(current_player)}")
-        {:noreply, assign(socket, error_message: "Authentication data is invalid. Please try logging in again.")}
+
+        {:noreply,
+         assign(socket,
+           error_message: "Authentication data is invalid. Please try logging in again."
+         )}
     end
   end
 
@@ -168,13 +176,18 @@ defmodule LoraWeb.LobbyLive do
 
   def time_ago(datetime) do
     # Ensure we're working with DateTime structs
-    datetime = case datetime do
-      %DateTime{} -> datetime
-      %NaiveDateTime{} -> DateTime.from_naive!(datetime, "Etc/UTC")
-      _ ->
-        # If it's something else, default to now
-        DateTime.utc_now()
-    end
+    datetime =
+      case datetime do
+        %DateTime{} ->
+          datetime
+
+        %NaiveDateTime{} ->
+          DateTime.from_naive!(datetime, "Etc/UTC")
+
+        _ ->
+          # If it's something else, default to now
+          DateTime.utc_now()
+      end
 
     diff = DateTime.diff(DateTime.utc_now(), datetime)
 

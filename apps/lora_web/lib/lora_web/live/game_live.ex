@@ -10,6 +10,7 @@ defmodule LoraWeb.GameLive do
   import LoraWeb.CurrentPlayerComponents
   import LoraWeb.CardUtils
   import LoraWeb.GameUtils
+  import LoraWeb.DeckCompoents
 
   @impl true
   def mount(%{"id" => game_id}, _session, socket) do
@@ -22,6 +23,7 @@ defmodule LoraWeb.GameLive do
     else
       player_id = current_player.sub
       player_name = current_player.name
+
       if connected?(socket) do
         # Subscribe to game updates
         PubSub.subscribe(Lora.PubSub, "game:#{game_id}")
