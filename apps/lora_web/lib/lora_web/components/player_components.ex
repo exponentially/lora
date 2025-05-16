@@ -1,5 +1,4 @@
 defmodule LoraWeb.PlayerComponents do
-  alias ElixirLS.DebugAdapter
   use Phoenix.Component
   import LoraWeb.GameUtils
   import LoraWeb.DeckCompoents
