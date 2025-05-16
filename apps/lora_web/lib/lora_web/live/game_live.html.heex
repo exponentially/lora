@@ -1,4 +1,4 @@
-<div class="min-h-screen w-full bg-gradient-to-br from-green-900 via-green-800 to-emerald-900 p-6">
+<div class="min-h-screen w-full bg-gradient-to-br from-primary-content to-success p-6">
   <%= if @loading do %>
     <div class="text-center py-24">
       <div class="inline-flex items-center px-6 py-3 bg-white/20 backdrop-blur-md rounded-xl">
@@ -57,7 +57,7 @@
                 <% opponent_seat_top = opponent_seats.top %>
 
                 <div class="flex flex-col items-center">
-                  <.player_plate
+                  <LoraWeb.PlayerComponents.player_plate
                     player={@player}
                     game={@game}
                     presences={@presences}
@@ -78,7 +78,7 @@
                   <% opponent_seat_left = opponent_seats.left %>
 
                   <div class="flex flex-col items-center">
-                    <.player_plate
+                    <LoraWeb.PlayerComponents.player_plate
                       player={@player}
                       game={@game}
                       presences={@presences}
@@ -137,7 +137,7 @@
                   <% opponent_seat_right = opponent_seats.right %>
 
                   <div class="flex flex-col items-center">
-                    <.player_plate
+                    <LoraWeb.PlayerComponents.player_plate
                       player={@player}
                       game={@game}
                       presences={@presences}

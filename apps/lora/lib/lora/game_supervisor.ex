@@ -17,6 +17,13 @@ defmodule Lora.GameSupervisor do
   end
 
   @doc """
+  Lists all active game IDs by querying the registry.
+  """
+  def list_games do
+    Registry.select(Lora.GameRegistry, [{{:"$1", :_, :_}, [], [:"$1"]}])
+  end
+
+  @doc """
   Creates a new game with a random 6-character ID and starts its server.
   Also adds the creator as the first player.
   """

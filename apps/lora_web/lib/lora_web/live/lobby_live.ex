@@ -11,14 +11,52 @@ defmodule LoraWeb.LobbyLive do
     player_id = if socket.assigns.current_player, do: socket.assigns.current_player.sub, else: nil
     player_name = if socket.assigns.current_player, do: socket.assigns.current_player.name, else: ""
 
+    # Get open games list
+    open_games = Lora.list_open_games() |> Enum.sort_by(&(&1.created_at), :desc)
+
+    # Get player's active games if logged in
+    active_games =
+      if player_id do
+        Lora.list_player_active_games(player_id) |> Enum.sort_by(&(&1.last_activity), :desc)
+      else
+        []
+      end
+
     socket =
       socket
       |> assign(:player_id, player_id)
       |> assign(:player_name, player_name)
       |> assign(:game_code, "")
       |> assign(:error_message, nil)
+      |> assign(:open_games, open_games)
+      |> assign(:active_games, active_games)
+
+    if connected?(socket), do: Process.send_after(self(), :update_games, 10000)
 
     {:ok, socket, temporary_assigns: [error_message: nil]}
+  end
+
+  @impl true
+  def handle_info(:update_games, socket) do
+    player_id = if socket.assigns.current_player, do: socket.assigns.current_player.sub, else: nil
+
+    # Get updated game lists
+    open_games = Lora.list_open_games() |> Enum.sort_by(&(&1.created_at), :desc)
+
+    active_games =
+      if player_id do
+        Lora.list_player_active_games(player_id) |> Enum.sort_by(&(&1.last_activity), :desc)
+      else
+        []
+      end
+
+    socket = socket
+      |> assign(:open_games, open_games)
+      |> assign(:active_games, active_games)
+
+    Process.send_after(self(), :update_games, 10000)
+
+    {:noreply, socket}
   end
 
   @impl true
@@ -126,5 +164,26 @@ defmodule LoraWeb.LobbyLive do
       |> assign(:player_name, player_name)
 
     push_navigate(socket, to: ~p"/game/#{game_id}", replace: false)
+  end
+
+  def time_ago(datetime) do
+    # Ensure we're working with DateTime structs
+    datetime = case datetime do
+      %DateTime{} -> datetime
+      %NaiveDateTime{} -> DateTime.from_naive!(datetime, "Etc/UTC")
+      _ ->
+        # If it's something else, default to now
+        DateTime.utc_now()
+    end
+
+    diff = DateTime.diff(DateTime.utc_now(), datetime)
+
+    cond do
+      diff < 60 -> "just now"
+      diff < 3600 -> "#{div(diff, 60)} minutes ago"
+      diff < 86400 -> "#{div(diff, 3600)} hours ago"
+      diff < 2_592_000 -> "#{div(diff, 86400)} days ago"
+      true -> Calendar.strftime(datetime, "%Y-%m-%d")
+    end
   end
 end

@@ -1,119 +1,192 @@
-<div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-md mt-10">
-  <div class="flex justify-between items-center mb-6">
-    <h1 class="text-3xl font-bold text-center">Lora Card Game</h1>
-    
-    <%= if @current_player do %>
-      <div class="relative" x-data="{ open: false }" @click.away="open = false">
-        <button 
-          @click="open = !open" 
-          class="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900"
-        >
-          <span class="mr-1"><%= @current_player.name %></span>
-          <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+<div class="max-w-4xl mx-auto mt-8">
+  <div class="card card-compact bg-base-100 shadow-xl mb-8">
+    <div class="card-body">
+      <h1 class="card-title text-3xl text-center justify-center mb-4">Welcome to Lora Card Game</h1>
+      
+      <%= if @error_message do %>
+        <div class="alert alert-error mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-        </button>
-        <div 
-          x-show="open" 
-          class="absolute right-0 mt-2 py-2 w-48 bg-white rounded-md shadow-lg z-10"
-          x-transition:enter="transition ease-out duration-100"
-          x-transition:enter-start="transform opacity-0 scale-95"
-          x-transition:enter-end="transform opacity-100 scale-100"
-        >
-          <.link 
-            href={~p"/auth/logout"} 
-            method="delete" 
-            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-          >
-            Sign Out
-          </.link>
+          <span>{@error_message}</span>
+        </div>
+      <% end %>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-4">
+        <div class="card card-bordered border-primary">
+          <div class="card-body">
+            <h2 class="card-title">Create a New Game</h2>
+            
+            <%= if @current_player do %>
+              <div class="badge badge-outline badge-lg mb-4">
+                Playing as: <%= @current_player.name %>
+              </div>
+              
+              <.form
+                id="create-game-form"
+                for={%{}}
+                phx-submit="create_game"
+                class="space-y-4"
+              >
+                <div class="card-actions justify-center">
+                  <button type="submit" class="btn btn-primary btn-block">
+                    Create Game
+                  </button>
+                </div>
+              </.form>
+            <% else %>
+              <div class="alert alert-warning">
+                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <span>Please sign in to create a game</span>
+              </div>
+            <% end %>
+          </div>
+        </div>
+
+        <div class="card card-bordered border-secondary">
+          <div class="card-body">
+            <h2 class="card-title">Join an Existing Game</h2>
+            
+            <%= if @current_player do %>
+              <div class="badge badge-outline badge-lg mb-4">
+                Playing as: <%= @current_player.name %>
+              </div>
+            <% else %>
+              <div class="alert alert-info">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span>Sign in to join games</span>
+              </div>
+            <% end %>
+      
+            <.form
+              :let={f}
+              id="join-game-form"
+              for={%{}}
+              as={:join_player}
+              phx-submit="join_game"
+              phx-change="validate"
+            >
+              <div class="form-control w-full">
+                <label class="label">
+                  <span class="label-text">Game Code</span>
+                </label>
+                <.input
+                  field={f[:game_code]}
+                  value={@game_code}
+                  placeholder="Enter 6-character code"
+                  required={true}
+                  maxlength={6}
+                  class="input input-bordered w-full uppercase"
+                />
+              </div>
+              <div class="card-actions justify-center mt-4">
+                <button type="submit" class="btn btn-secondary btn-block">
+                  Join Game
+                </button>
+              </div>
+            </.form>
+          </div>
         </div>
       </div>
-    <% else %>
-      <.link 
-        href={~p"/auth/auth0"} 
-        class="text-indigo-600 hover:text-indigo-800 font-medium"
-      >
-        Sign In
-      </.link>
-    <% end %>
+    </div>
   </div>
 
-  <%= if @error_message do %>
-    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-      <p>{@error_message}</p>
+  <!-- Open Games Section -->
+  <div class="card card-compact bg-base-100 shadow-xl mb-8">
+    <div class="card-body">
+      <h2 class="card-title">Open Games</h2>
+      
+      <%= if Enum.empty?(@open_games) do %>
+        <div class="alert">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-info shrink-0 w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <span>No open games available. Why not create one?</span>
+        </div>
+      <% else %>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <%= for game <- @open_games do %>
+            <div class="card card-compact bg-base-200 hover:bg-base-300 transition-colors">
+              <div class="card-body">
+                <div class="flex justify-between items-center">
+                  <h3 class="card-title">
+                    Game: <%= game.id %>
+                    <div class="badge badge-primary"><%= game.player_count %>/4</div>
+                  </h3>
+                </div>
+                <div class="text-sm opacity-80">
+                  <p>Created by: <%= game.creator %></p>
+                  <p>Created <%= time_ago(game.created_at) %></p>
+                </div>
+                <div class="card-actions justify-end mt-2">
+                  <.form :let={f} for={%{}} as={:join_game} phx-submit="join_game">
+                    <.input type="hidden" field={f[:game_code]} value={game.id} />
+                    <button type="submit" class="btn btn-sm btn-secondary">
+                      Join
+                    </button>
+                  </.form>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Your Active Games Section -->
+  <%= if @current_player && !Enum.empty?(@active_games) do %>
+    <div class="card card-compact bg-base-100 shadow-xl mb-8">
+      <div class="card-body">
+        <h2 class="card-title">Your Active Games</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <%= for game <- @active_games do %>
+            <div class="card bg-base-200 hover:bg-base-300 transition-colors shadow-md">
+              <div class="card-body">
+                <div class="flex justify-between">
+                  <h3 class="card-title">
+                    Game: <%= game.id %>
+                    <%= if game.your_turn do %>
+                      <div class="badge badge-error animate-pulse">Your Turn!</div>
+                    <% end %>
+                  </h3>
+                </div>
+                
+                <div class="text-sm opacity-80">
+                  <p>Players: <%= Enum.join(game.players, ", ") %> (<%= game.player_count %>/4)</p>
+                  <p>
+                    <%= if game.playing do %>
+                      <span class="badge badge-warning">Game in progress</span>
+                    <% else %>
+                      <span class="badge badge-success">Waiting for players</span>
+                    <% end %>
+                    <span class="ml-2">Last activity: <%= time_ago(game.last_activity) %></span>
+                  </p>
+                </div>
+                
+                <div class="card-actions justify-end mt-2">
+                  <.link
+                    navigate={~p"/game/#{game.id}"}
+                    class="btn btn-sm btn-primary"
+                  >
+                    Resume
+                  </.link>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
     </div>
   <% end %>
 
-  <div class="grid grid-cols-1 gap-6 mb-4">
-    <div class="border-b pb-4">
-      <h2 class="text-xl font-semibold mb-4">Create a New Game</h2>
-      
-      <%= if @current_player do %>
-        <div class="mb-4">
-          <p class="text-sm text-gray-600">You'll join as: <span class="font-medium"><%= @current_player.name %></span></p>
-        </div>
-      <% end %>
-      
-      <.form
-        id="create-game-form"
-        for={%{}}
-        phx-submit="create_game"
-        class="space-y-4"
-      >
-        <div>
-          <.button
-            type="submit"
-            class="w-full bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-          >
-            Create Game
-          </.button>
-        </div>
-      </.form>
-    </div>
-
-    <div>
-      <h2 class="text-xl font-semibold mb-4">Join an Existing Game</h2>
-      
-      <%= if @current_player do %>
-        <div class="mb-4">
-          <p class="text-sm text-gray-600">You'll join as: <span class="font-medium"><%= @current_player.name %></span></p>
-        </div>
-      <% end %>
-      
-      <.form
-        :let={f}
-        id="join-game-form"
-        for={%{}}
-        as={:join_player}
-        phx-submit="join_game"
-        phx-change="validate"
-        class="space-y-4"
-      >
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Game Code</label>
-          <.input
-            field={f[:game_code]}
-            value={@game_code}
-            placeholder="Enter 6-character code"
-            required={true}
-            maxlength={6}
-            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 uppercase"
-          />
-        </div>
-        <div>
-          <.button
-            type="submit"
-            class="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-          >
-            Join Game
-          </.button>
-        </div>
-      </.form>
-    </div>
-  </div>
-
-  <div class="text-center text-sm text-gray-500 mt-6">
-    <p>Lora Card Game - Serbian Variant - 4 players, 32-card deck</p>
-  </div>
+  <footer class="footer footer-center p-4 bg-base-100 text-base-content rounded-lg shadow-xl">
+    <aside>
+      <p>Lora Card Game - Serbian Variant - 4 players, 32-card deck</p>
+    </aside>
+  </footer>
 </div>
