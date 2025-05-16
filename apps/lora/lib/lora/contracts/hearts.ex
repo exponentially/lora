@@ -5,10 +5,17 @@ defmodule Lora.Contracts.Hearts do
   If one player takes all hearts, they get minus eight points.
   """
 
-  @behaviour Lora.Contracts.ContractBehaviour
+  @behaviour Lora.Contract
 
   alias Lora.Score
   alias Lora.Contracts.TrickTaking
+
+  @impl true
+  def name, do: "Hearts"
+
+  @impl true
+  def description,
+    do: "Plus one point per heart taken; minus eight if one player takes all hearts"
 
   @impl true
   def is_legal_move?(state, seat, card) do

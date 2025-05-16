@@ -1,87 +1,92 @@
 defmodule Lora.Contract do
   @moduledoc """
-  Defines the seven contracts of the Lora card game and their scoring rules.
+  Defines the behavior for contract implementations in the Lora card game.
+
+  Each contract should implement this behavior and provide the required callbacks.
   """
 
-  @type t ::
-          :minimum
-          | :maximum
-          | :queens
-          | :hearts
-          | :jack_of_clubs
-          | :king_hearts_last_trick
-          | :lora
+  alias Lora.Game
 
+  # Define the callback specifications that all contracts must implement
+
+  @doc """
+  Returns the name of the contract for display.
+  """
+  @callback name() :: String.t()
+
+  @doc """
+  Returns the description of the contract's scoring rules.
+  """
+  @callback description() :: String.t()
+
+  @doc """
+  Check if a move is legal in the context of this contract.
+  """
+  @callback is_legal_move?(Game.t(), integer(), Lora.Deck.card()) :: boolean()
+
+  @doc """
+  Handle a card being played in this contract.
+  """
+  @callback play_card(Game.t(), integer(), Lora.Deck.card(), map()) :: {:ok, Game.t()}
+
+  @doc """
+  Calculate scores at the end of a contract.
+  """
+  @callback calculate_scores(Game.t(), map(), map(), integer()) :: map()
+
+  @doc """
+  Handle the end of a contract.
+  """
+  @callback handle_deal_over(Game.t(), map(), map(), integer()) :: Game.t()
+
+  @doc """
+  Check if a passing action is legal for this contract.
+  """
+  @callback can_pass?(Game.t(), integer()) :: boolean()
+
+  @doc """
+  Handle a pass action.
+  """
+  @callback pass(Game.t(), integer()) :: {:ok, Game.t()} | {:error, binary()}
+
+  # Contract modules in the fixed order
   @contracts [
-    :minimum,
-    :maximum,
-    :queens,
-    :hearts,
-    :jack_of_clubs,
-    :king_hearts_last_trick,
-    :lora
+    Lora.Contracts.Minimum,
+    Lora.Contracts.Maximum,
+    Lora.Contracts.Queens,
+    Lora.Contracts.Hearts,
+    Lora.Contracts.JackOfClubs,
+    Lora.Contracts.KingHeartsLastTrick,
+    Lora.Contracts.Lora
   ]
 
   @doc """
-  Returns all available contracts in their fixed order.
+  Returns all available contract modules in their fixed order.
   """
-  @spec all :: [t]
+  @spec all :: [module()]
   def all, do: @contracts
 
   @doc """
-  Returns the contract at the given index (0-based).
+  Returns the contract module at the given index (0-based).
   """
-  @spec at(non_neg_integer) :: t
+  @spec at(non_neg_integer) :: module()
   def at(index) when index >= 0 and index < length(@contracts) do
     Enum.at(@contracts, index)
   end
 
   @doc """
-  Returns the name of the contract for display.
+  Returns the name of the contract from the module's callback.
   """
-  @spec name(t) :: String.t()
-  def name(:minimum), do: "Minimum"
-  def name(:maximum), do: "Maximum"
-  def name(:queens), do: "Queens"
-  def name(:hearts), do: "Hearts"
-  def name(:jack_of_clubs), do: "Jack of Clubs"
-  def name(:king_hearts_last_trick), do: "King of Hearts + Last Trick"
-  def name(:lora), do: "Lora"
-
-  @doc """
-  Returns the description of the contract's scoring rules.
-  """
-  @spec description(t) :: String.t()
-  def description(:minimum), do: "Plus one point per trick taken"
-  def description(:maximum), do: "Minus one point per trick taken"
-  def description(:queens), do: "Plus two points per queen taken"
-
-  def description(:hearts),
-    do: "Plus one point per heart taken; minus eight if one player takes all hearts"
-
-  def description(:jack_of_clubs), do: "Plus eight points to the player who takes it"
-
-  def description(:king_hearts_last_trick),
-    do:
-      "Plus four points each for King of Hearts and Last Trick; plus eight if captured in the same trick"
-
-  def description(:lora),
-    do:
-      "Minus eight to the first player who empties hand; all others receive plus one point per remaining card"
-
-  @doc """
-  Returns whether the contract is a trick-taking contract or Lora.
-  """
-  @spec trick_taking?(t) :: boolean
-  def trick_taking?(contract) do
-    contract != :lora
+  @spec name(module()) :: String.t()
+  def name(contract_module) do
+    contract_module.name()
   end
 
   @doc """
-  Returns the index of a contract in the fixed order.
+  Returns the description of the contract from the module's callback.
   """
-  @spec index(t) :: non_neg_integer
-  def index(contract) do
-    Enum.find_index(@contracts, &(&1 == contract))
+  @spec description(module()) :: String.t()
+  def description(contract_module) do
+    contract_module.description()
   end
 end

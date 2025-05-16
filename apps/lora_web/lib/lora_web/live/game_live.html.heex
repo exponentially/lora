@@ -1,250 +1,311 @@
-<div class="min-h-screen bg-gray-100 py-6 flex flex-col justify-center">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <%= if @loading do %>
-      <div class="text-center py-12">
-        <div class="animate-pulse text-2xl font-semibold">Loading game...</div>
+<div class="min-h-screen w-full bg-gradient-to-br from-green-900 via-green-800 to-emerald-900 p-6">
+  <%= if @loading do %>
+    <div class="text-center py-24">
+      <div class="inline-flex items-center px-6 py-3 bg-white/20 backdrop-blur-md rounded-xl">
+        <svg
+          class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+          </circle>
+          <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          >
+          </path>
+        </svg>
+        <span class="text-2xl font-semibold text-white">Loading game...</span>
       </div>
-    <% else %>
-      <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
-        <div class="px-4 py-5 border-b border-gray-200 sm:px-6 flex justify-between items-center">
-          <div>
-            <h1 class="text-lg leading-6 font-medium text-gray-900">
-              Game: {@game.id}
-            </h1>
-            <p class="mt-1 max-w-2xl text-sm text-gray-500">
-              {Contract.name(@current_contract)}: {Contract.description(@current_contract)}
-            </p>
+    </div>
+  <% else %>
+    <!-- Main flex layout: Game on left (larger), Info cards on right -->
+    <div class="flex h-full gap-6">
+      <!-- Game area on left - takes most of the space -->
+      <div class="flex-1">
+        <!-- Game board content -->
+        <%= if !@player do %>
+          <div class="text-center py-16">
+            <div class="inline-block bg-white/30 backdrop-blur-md px-8 py-6 rounded-xl">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-12 w-12 text-white mx-auto mb-3"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <div class="text-2xl font-semibold text-white">Waiting for game to start...</div>
+            </div>
           </div>
-          <div>
-            <span class="inline-flex items-center rounded-md bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
+        <% else %>
+          <!-- Game Board Content -->
+          <div class="h-full flex flex-col justify-between">
+            <!-- Game board - Centered layout with players around the center -->
+            <div class="flex-grow flex flex-col items-center justify-between py-4">
+              <% opponent_seats = LoraWeb.GameUtils.calculate_opponent_seats(@player.seat) %>
+              <!-- Top opponent -->
+              <div class="w-full max-w-2xl mx-auto mb-6">
+                <% opponent_seat_top = opponent_seats.top %>
+
+                <div class="flex flex-col items-center">
+                  <.player_plate
+                    player={@player}
+                    game={@game}
+                    presences={@presences}
+                    player_seat={opponent_seat_top}
+                    size="medium"
+                  />
+
+                  <div class="flex justify-center">
+                    <.card_stack player_seat={opponent_seat_top} game={@game} size="medium" />
+                  </div>
+                </div>
+              </div>
+              
+<!-- Middle row - Left player, Center area, Right player -->
+              <div class="w-full flex items-start justify-between mb-8 gap-4">
+                <!-- Left player -->
+                <div class="w-1/4">
+                  <% opponent_seat_left = opponent_seats.left %>
+
+                  <div class="flex flex-col items-center">
+                    <.player_plate
+                      player={@player}
+                      game={@game}
+                      presences={@presences}
+                      player_seat={opponent_seat_left}
+                      size="small"
+                    />
+
+                    <.card_stack player_seat={opponent_seat_left} game={@game} size="small" />
+                  </div>
+                </div>
+                
+<!-- Center - Current trick or Lora layout -->
+                <div class="w-2/4 bg-green-900/70 backdrop-blur-md rounded-xl shadow-2xl p-4 min-h-[320px] border border-emerald-700/50">
+                  <%= if @current_contract == :lora do %>
+                    <div class="text-white text-center font-semibold mb-3">Lora Layout</div>
+                    <div class="grid grid-cols-1 gap-3">
+                      <%= for suit <- [:clubs, :diamonds, :hearts, :spades] do %>
+                        <div class="flex items-center">
+                          <div class="w-6 text-white text-xl">{format_suit(suit)}</div>
+                          <div class="flex flex-grow overflow-x-auto">
+                            <%= for {card_suit, rank} <- @game.lora_layout[suit] || [] do %>
+                              <div class={"card-mini flex items-center justify-center h-10 w-8 bg-white rounded-md mr-1 shadow-md #{suit_color(card_suit)}"}>
+                                {format_rank(rank)}
+                              </div>
+                            <% end %>
+                          </div>
+                        </div>
+                      <% end %>
+                    </div>
+                  <% else %>
+                    <div class="text-white text-center font-semibold mb-3">Current Trick</div>
+                    <div class="grid grid-cols-2 grid-rows-2 gap-6 h-full py-4">
+                      <%= for seat <- 1..4 do %>
+                        <div class="flex items-center justify-center">
+                          <% trick_card = Enum.find(@game.trick, fn {s, _} -> s == seat end) %>
+                          <%= if trick_card do %>
+                            <% {_, {suit, rank}} = trick_card %>
+                            <div class={"card flex items-center justify-center h-28 w-20 bg-white rounded-lg shadow-2xl #{suit_color(suit)}"}>
+                              <span class="text-2xl font-bold">{format_rank(rank)}</span>
+                              <span class="absolute top-1 left-1 text-sm">
+                                {format_suit(suit)}
+                              </span>
+                              <span class="absolute bottom-1 right-1 text-sm transform rotate-180">
+                                {format_suit(suit)}
+                              </span>
+                            </div>
+                          <% end %>
+                        </div>
+                      <% end %>
+                    </div>
+                  <% end %>
+                </div>
+                
+<!-- Right player -->
+                <div class="w-1/4">
+                  <% opponent_seat_right = opponent_seats.right %>
+
+                  <div class="flex flex-col items-center">
+                    <.player_plate
+                      player={@player}
+                      game={@game}
+                      presences={@presences}
+                      player_seat={opponent_seat_right}
+                      size="small"
+                    />
+
+                    <.card_stack player_seat={opponent_seat_right} game={@game} size="small" />
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+<!-- Player area - emphasized at the bottom -->
+            <.player_hand
+              player={@player}
+              game={@game}
+              legal_moves={@legal_moves}
+              current_contract={@current_contract}
+            />
+          </div>
+        <% end %>
+      </div>
+      
+<!-- Info panel on the right - stacked vertically -->
+      <div class="w-80 flex flex-col gap-5">
+        <!-- Game header - now on the right side -->
+        <div class="bg-white/80 shadow-xl backdrop-blur-md rounded-2xl py-3 px-5 flex flex-col border border-white/20">
+          <h1 class="text-lg leading-6 font-semibold text-gray-900 mb-1">
+            {Lora.Contract.name(@current_contract)}
+          </h1>
+          <p class="text-sm text-gray-600 mb-3">
+            {Lora.Contract.description(@current_contract)}
+          </p>
+          <div class="flex flex-col gap-2">
+            <span class="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700 border border-blue-200">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-3 w-3 mr-1"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
               Dealer: {find_player_name(@game, @game.dealer_seat)}
             </span>
-            <span class="inline-flex items-center rounded-md bg-green-100 px-2 py-1 text-xs font-medium text-green-700 ml-2">
+            <span class="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700 border border-green-200">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-3 w-3 mr-1"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                />
+              </svg>
               Current Player: {find_player_name(@game, @game.current_player)}
             </span>
           </div>
         </div>
+        
+<!-- Scoreboard - now stacked on right -->
+        <div class="bg-white/90 rounded-xl shadow-xl overflow-hidden backdrop-blur-md border border-white/20 flex-grow">
+          <div class="px-4 py-2 bg-gradient-to-r from-indigo-700 to-indigo-600 rounded-t-xl">
+            <h3 class="text-sm font-medium text-white">Scoreboard</h3>
+          </div>
+          <div class="px-3 py-2">
+            <table class="w-full divide-y divide-gray-200">
+              <thead>
+                <tr>
+                  <th class="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Player
+                  </th>
+                  <th class="px-2 py-1 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Score
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                <%= for p <- @game.players do %>
+                  <tr class={if p.seat == @player.seat, do: "bg-amber-50/80"}>
+                    <td class="px-2 py-1.5 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {p.name}
+                      {if p.seat == @player.seat, do: "👤"}
+                      {if p.seat == @game.dealer_seat, do: "🎲"}
+                    </td>
+                    <td class="px-2 py-1.5 whitespace-nowrap text-sm text-right text-gray-700 font-medium">
+                      {Map.get(@game.scores, p.seat, 0)}
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+<!-- Game Info - now stacked on right -->
+        <div class="bg-white/90 rounded-xl shadow-xl backdrop-blur-md border border-white/20">
+          <div class="px-4 py-2 bg-gradient-to-r from-emerald-700 to-emerald-600 rounded-t-xl">
+            <h3 class="text-sm font-medium text-white">Game Info</h3>
+          </div>
+          <div class="p-3">
+            <dl class="grid grid-cols-2 gap-x-2 gap-y-2">
+              <dt class="text-xs font-medium text-gray-500">Contract</dt>
+              <dd class="text-xs font-semibold text-gray-700">
+                {Contract.name(@current_contract)}
+              </dd>
+              <dt class="text-xs font-medium text-gray-500">Dealer</dt>
+              <dd class="text-xs font-semibold text-gray-700">
+                {find_player_name(@game, @game.dealer_seat)}
+              </dd>
+              <dt class="text-xs font-medium text-gray-500">Phase</dt>
+              <dd class="text-xs font-semibold text-gray-700 capitalize">
+                {to_string(@game.phase)}
+              </dd>
+              <dt class="text-xs font-medium text-gray-500">Deal</dt>
+              <dd class="text-xs font-semibold text-gray-700">{@game.dealt_count} / 28</dd>
+            </dl>
+          </div>
+        </div>
       </div>
-      
-<!-- Game board -->
-      <%= if !@player do %>
-        <div class="text-center py-12">
-          <div class="text-2xl font-semibold">Waiting for game to start...</div>
-        </div>
-      <% else %>
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-6">
-          <!-- Left side - Opponent hands and board -->
-          <div class="md:col-span-8 space-y-4">
-            <!-- Top player (opponent across) -->
-            <div class="bg-white p-4 rounded-lg shadow text-center">
-              <div class="text-sm font-semibold mb-2">
-                {find_player_name(@game, rem(@player.seat + 1, 4) + 1)}
-                <%= if @game.current_player == rem(@player.seat + 1, 4) + 1 do %>
-                  <span class="ml-2 inline-block w-3 h-3 bg-green-500 rounded-full"></span>
-                <% end %>
-              </div>
-              <div class="flex justify-center space-x-1">
-                <%= if @game.phase == :playing do %>
-                  <%= for _card <- 1..length(Map.get(@game.hands, rem(@player.seat + 1, 4) + 1, [])) do %>
-                    <div class="h-16 w-10 bg-blue-800 rounded-md shadow-md"></div>
-                  <% end %>
-                <% end %>
-              </div>
-            </div>
-            
-<!-- Middle section - Left and right players + current trick -->
-            <div class="flex">
-              <!-- Left player -->
-              <div class="bg-white p-4 rounded-lg shadow flex-shrink-0 w-1/5">
-                <div class="text-sm font-semibold mb-2 text-center">
-                  {find_player_name(@game, rem(@player.seat + 2, 4) + 1)}
-                  <%= if @game.current_player == rem(@player.seat + 2, 4) + 1 do %>
-                    <span class="ml-2 inline-block w-3 h-3 bg-green-500 rounded-full"></span>
-                  <% end %>
-                </div>
-                <div class="flex flex-col items-center space-y-1">
-                  <%= if @game.phase == :playing do %>
-                    <%= for _card <- 1..length(Map.get(@game.hands, rem(@player.seat + 2, 4) + 1, [])) do %>
-                      <div class="h-10 w-16 bg-blue-800 rounded-md shadow-md"></div>
-                    <% end %>
-                  <% end %>
-                </div>
-              </div>
-              
-<!-- Middle - Current trick or Lora layout -->
-              <div class="flex-grow bg-green-800 rounded-lg shadow mx-2 p-4">
-                <%= if @current_contract == :lora do %>
-                  <div class="text-white text-center font-semibold mb-2">Lora Layout</div>
-                  <div class="grid grid-cols-1 gap-2">
-                    <%= for suit <- [:clubs, :diamonds, :hearts, :spades] do %>
-                      <div class="flex items-center">
-                        <div class="w-6 text-white text-xl">{format_suit(suit)}</div>
-                        <div class="flex flex-grow overflow-x-auto">
-                          <%= for {card_suit, rank} <- @game.lora_layout[suit] || [] do %>
-                            <div class={"card-mini flex items-center justify-center h-10 w-8 bg-white rounded-sm mr-1 #{suit_color(card_suit)}"}>
-                              {format_rank(rank)}
-                            </div>
-                          <% end %>
-                        </div>
-                      </div>
-                    <% end %>
-                  </div>
-                <% else %>
-                  <div class="text-white text-center font-semibold mb-2">Current Trick</div>
-                  <div class="grid grid-cols-2 grid-rows-2 gap-4 h-full">
-                    <%= for seat <- 1..4 do %>
-                      <div class="flex items-center justify-center">
-                        <% trick_card = Enum.find(@game.trick, fn {s, _} -> s == seat end) %>
-                        <%= if trick_card do %>
-                          <% {_, {suit, rank}} = trick_card %>
-                          <div class={"card flex items-center justify-center h-20 w-14 bg-white rounded-md shadow-md #{suit_color(suit)}"}>
-                            <div class="text-xl">
-                              {format_rank(rank)}{format_suit(suit)}
-                            </div>
-                          </div>
-                        <% end %>
-                      </div>
-                    <% end %>
-                  </div>
-                <% end %>
-              </div>
-              
-<!-- Right player -->
-              <div class="bg-white p-4 rounded-lg shadow flex-shrink-0 w-1/5">
-                <div class="text-sm font-semibold mb-2 text-center">
-                  {find_player_name(@game, rem(@player.seat, 4) + 1)}
-                  <%= if @game.current_player == rem(@player.seat, 4) + 1 do %>
-                    <span class="ml-2 inline-block w-3 h-3 bg-green-500 rounded-full"></span>
-                  <% end %>
-                </div>
-                <div class="flex flex-col items-center space-y-1">
-                  <%= if @game.phase == :playing do %>
-                    <%= for _card <- 1..length(Map.get(@game.hands, rem(@player.seat, 4) + 1, [])) do %>
-                      <div class="h-10 w-16 bg-blue-800 rounded-md shadow-md"></div>
-                    <% end %>
-                  <% end %>
-                </div>
-              </div>
-            </div>
-            
-<!-- Scores table -->
-            <div class="bg-white rounded-lg shadow overflow-hidden">
-              <div class="px-4 py-2 bg-gray-50 border-b border-gray-200">
-                <h3 class="text-sm font-medium text-gray-700">Scoreboard</h3>
-              </div>
-              <div class="px-4 py-2">
-                <table class="min-w-full divide-y divide-gray-200">
-                  <thead>
-                    <tr>
-                      <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Player
-                      </th>
-                      <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Score
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-gray-200">
-                    <%= for seat <- 1..4 do %>
-                      <tr class={
-                        if @game.phase == :finished && find_winner(@game.scores) == seat,
-                          do: "bg-yellow-100",
-                          else: ""
-                      }>
-                        <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
-                          {find_player_name(@game, seat)}
-                        </td>
-                        <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
-                          {Map.get(@game.scores, seat, 0)}
-                        </td>
-                      </tr>
-                    <% end %>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-          
-<!-- Right side - Player hand and actions -->
-          <div class="md:col-span-4 space-y-4">
-            <!-- Player info -->
-            <div class="bg-white p-4 rounded-lg shadow">
-              <div class="flex justify-between items-center">
-                <div>
-                  <h3 class="text-lg font-medium text-gray-900">{@player.name}</h3>
-                  <p class="mt-1 text-sm text-gray-500">
-                    Seat: {@player.seat}
-                  </p>
-                </div>
-                <%= if @game.phase == :playing && @game.current_player == @player.seat do %>
-                  <span class="inline-flex items-center rounded-md bg-green-100 px-3 py-1 text-sm font-medium text-green-700">
-                    Your Turn
-                  </span>
-                <% end %>
-              </div>
-            </div>
-            
-<!-- Player hand -->
-            <div class="bg-white p-4 rounded-lg shadow">
-              <h3 class="text-lg font-medium text-gray-900 mb-4">Your Hand</h3>
-              <div class="flex flex-wrap gap-2 justify-center">
-                <%= for {suit, rank} <- Map.get(@game.hands, @player.seat, []) do %>
-                  <button
-                    phx-click="play_card"
-                    phx-value-suit={suit}
-                    phx-value-rank={rank}
-                    class={"card flex flex-col items-center justify-center h-24 w-16 rounded-md shadow-md #{if Enum.member?(@legal_moves, {suit, rank}), do: "bg-white hover:bg-gray-100 cursor-pointer", else: "bg-gray-200 cursor-not-allowed"} #{suit_color(suit)}"}
-                    disabled={not Enum.member?(@legal_moves, {suit, rank})}
-                  >
-                    <div class="text-xl">
-                      {format_rank(rank)}{format_suit(suit)}
-                    </div>
-                  </button>
-                <% end %>
-              </div>
-              <%= if @current_contract == :lora && @game.current_player == @player.seat && Enum.empty?(@legal_moves) && length(Map.get(@game.hands, @player.seat, [])) > 0 do %>
-                <div class="mt-4 text-center">
-                  <button
-                    phx-click="pass"
-                    class="bg-yellow-500 text-white py-2 px-4 rounded hover:bg-yellow-600"
-                  >
-                    Pass (No Legal Moves)
-                  </button>
-                </div>
-              <% end %>
-            </div>
-            
-<!-- Game info -->
-            <div class="bg-white p-4 rounded-lg shadow">
-              <h3 class="text-lg font-medium text-gray-900 mb-2">Game Info</h3>
-              <dl class="grid grid-cols-2 gap-x-4 gap-y-2">
-                <dt class="text-sm font-medium text-gray-500">Contract</dt>
-                <dd class="text-sm text-gray-900">{Contract.name(@current_contract)}</dd>
-
-                <dt class="text-sm font-medium text-gray-500">Dealer</dt>
-                <dd class="text-sm text-gray-900">
-                  {find_player_name(@game, @game.dealer_seat)}
-                </dd>
-
-                <dt class="text-sm font-medium text-gray-500">Game Phase</dt>
-                <dd class="text-sm text-gray-900">{String.capitalize(to_string(@game.phase))}</dd>
-
-                <dt class="text-sm font-medium text-gray-500">Deal</dt>
-                <dd class="text-sm text-gray-900">{@game.dealt_count} / 28</dd>
-              </dl>
-            </div>
-          </div>
-        </div>
-      <% end %>
-    <% end %>
-  </div>
+    </div>
+  <% end %>
 
   <style>
     .hearts, .diamonds {
-      color: #e53e3e;
+      color: #dc2626; /* Tailwind red-600 */
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     }
     .clubs, .spades {
-      color: #2d3748;
+      color: #1f2937; /* Tailwind gray-800 */
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+    .card-mini {
+      font-size: 0.6rem;
+      line-height: 0.8rem;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .bg-table {
+      background-image: radial-gradient(circle, #2f855a 0%, #1a4731 100%);
+    }
+    .card {
+      position: relative;
+      box-shadow: 0 4px 10px -1px rgba(0, 0, 0, 0.1), 0 2px 6px -1px rgba(0, 0, 0, 0.06);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-origin: center bottom;
+    }
+    .card:hover {
+      transform: translateY(-12px) scale(1.03);
+      box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      z-index: 10;
+    }
+    .card span {
+      transition: all 0.2s ease;
+    }
+    .card:hover span {
+      transform: scale(1.05);
     }
   </style>
 </div>

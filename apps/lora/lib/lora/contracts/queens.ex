@@ -4,10 +4,16 @@ defmodule Lora.Contracts.Queens do
   In this contract, players score plus two points per queen taken.
   """
 
-  @behaviour Lora.Contracts.ContractBehaviour
+  @behaviour Lora.Contract
 
   alias Lora.Score
   alias Lora.Contracts.TrickTaking
+
+  @impl true
+  def name, do: "Queens"
+
+  @impl true
+  def description, do: "Plus two points per queen taken"
 
   @impl true
   def is_legal_move?(state, seat, card) do

@@ -1,9 +1,15 @@
+# filepath: /home/mjaric/prj/tmp/lora/apps/lora_web/lib/lora_web/live/game_live.ex
 defmodule LoraWeb.GameLive do
   use LoraWeb, :live_view
   require Logger
 
   alias Phoenix.PubSub
   alias Lora.{Contract}
+  alias LoraWeb.Presence
+  import LoraWeb.PlayerComponents
+  import LoraWeb.CurrentPlayerComponents
+  import LoraWeb.CardUtils
+  import LoraWeb.GameUtils
 
   @impl true
   def mount(%{"id" => game_id}, session, socket) do
@@ -17,6 +23,21 @@ defmodule LoraWeb.GameLive do
       if connected?(socket) do
         # Subscribe to game updates
         PubSub.subscribe(Lora.PubSub, "game:#{game_id}")
+
+        # Subscribe to presence updates for this game
+        presence_topic = Presence.game_topic(game_id)
+        PubSub.subscribe(Lora.PubSub, presence_topic)
+
+        # Track this player's presence
+        Presence.track(
+          self(),
+          presence_topic,
+          player_id,
+          %{
+            name: player_name,
+            online_at: System.system_time(:second)
+          }
+        )
 
         case Lora.get_game_state(game_id) do
           {:ok, game} ->
@@ -112,10 +133,29 @@ defmodule LoraWeb.GameLive do
       end
 
     if player_id do
-      socket = assign_game_state(socket, game, player_id)
+      # Get current presence information
+      presences = Presence.list(Presence.game_topic(game.id))
+
+      socket =
+        socket
+        |> assign_game_state(game, player_id)
+        |> assign(:presences, presences)
+
       {:noreply, socket}
     else
       Logger.error("Player ID not found in socket assigns during game update")
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_info(%{event: "presence_diff"}, socket) do
+    # When presence changes, update the presences assign
+    if Map.has_key?(socket.assigns, :game) && is_map(socket.assigns.game) do
+      game_id = socket.assigns.game.id
+      presences = Presence.list(Presence.game_topic(game_id))
+      {:noreply, assign(socket, :presences, presences)}
+    else
       {:noreply, socket}
     end
   end
@@ -144,12 +184,20 @@ defmodule LoraWeb.GameLive do
       # First check if we have game and player directly in the assigns structure
       connected?(socket) and Map.has_key?(socket.assigns, :game) and is_map(socket.assigns.game) and
         Map.has_key?(socket.assigns, :player) and is_map(socket.assigns.player) ->
-        Lora.player_disconnect(socket.assigns.game.id, socket.assigns.player.id)
+        game_id = socket.assigns.game.id
+        player_id = socket.assigns.player.id
+        # Untrack from presence and tell the game server
+        Presence.untrack(self(), Presence.game_topic(game_id), player_id)
+        Lora.player_disconnect(game_id, player_id)
 
       # Fallback to the original approach for backward compatibility
       connected?(socket) and Map.has_key?(socket.assigns, :game_id) and
           Map.has_key?(socket.assigns, :player_id) ->
-        Lora.player_disconnect(socket.assigns.game_id, socket.assigns.player_id)
+        game_id = socket.assigns.game_id
+        player_id = socket.assigns.player_id
+        # Untrack from presence and tell the game server
+        Presence.untrack(self(), Presence.game_topic(game_id), player_id)
+        Lora.player_disconnect(game_id, player_id)
 
       true ->
         :ok
@@ -163,6 +211,8 @@ defmodule LoraWeb.GameLive do
   defp assign_game_state(socket, game, player_id) do
     # Find the player's seat
     player = Enum.find(game.players, fn p -> p.id == player_id end)
+    # Get current presence information
+    presences = Presence.list(Presence.game_topic(game.id))
 
     socket
     |> assign(:game, game)
@@ -170,6 +220,7 @@ defmodule LoraWeb.GameLive do
     |> assign(:player, player)
     |> assign(:current_contract, Contract.at(game.contract_index))
     |> assign(:legal_moves, get_legal_moves(game, player))
+    |> assign(:presences, presences)
   end
 
   defp get_legal_moves(_game, nil), do: []
@@ -201,39 +252,11 @@ defmodule LoraWeb.GameLive do
 
   # View helper functions
 
-  def find_player_name(game, seat) do
-    game.players
-    |> Enum.find(fn p -> p.seat == seat end)
-    |> case do
-      nil -> "Unknown"
-      player -> player.name
-    end
-  end
+  # Player name finding moved to LoraWeb.GameUtils
 
-  def format_suit(suit) do
-    case suit do
-      :hearts -> "♥"
-      :diamonds -> "♦"
-      :clubs -> "♣"
-      :spades -> "♠"
-      _ -> suit
-    end
-  end
+  # Card formatting moved to LoraWeb.CardUtils
 
-  def format_rank(rank) do
-    case rank do
-      :ace -> "A"
-      :king -> "K"
-      :queen -> "Q"
-      :jack -> "J"
-      num -> num
-    end
-  end
-
-  # red
-  def suit_color(suit) when suit in [:hearts, :diamonds], do: "hearts"
-  # black
-  def suit_color(suit) when suit in [:clubs, :spades], do: "clubs"
+  # Card coloring moved to LoraWeb.CardUtils
 
   def find_winner(scores) do
     {winning_seat, _} = Enum.max_by(scores, fn {_seat, score} -> score end)

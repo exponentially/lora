@@ -67,11 +67,11 @@ defmodule Lora.Contracts.TrickTaking do
   Common implementation of handle_deal_over for trick-taking contracts.
   """
   def handle_deal_over(state, hands, taken, last_trick_winner) do
-    contract = Lora.Contract.at(state.contract_index)
+    # Get the contract module directly using the new approach
+    contract_module = Lora.Contract.at(state.contract_index)
 
     # Calculate scores for this contract
-    module_name = contract_module(contract)
-    contract_scores = module_name.calculate_scores(state, hands, taken, last_trick_winner)
+    contract_scores = contract_module.calculate_scores(state, hands, taken, last_trick_winner)
 
     # Update cumulative scores
     updated_scores = Score.update_cumulative_scores(state.scores, contract_scores)
@@ -103,21 +103,6 @@ defmodule Lora.Contracts.TrickTaking do
   """
   def pass(_state, _seat) do
     {:error, "Cannot pass in trick-taking contracts"}
-  end
-
-  @doc """
-  Helper to get the appropriate contract implementation module.
-  """
-  def contract_module(contract) do
-    case contract do
-      :minimum -> Lora.Contracts.Minimum
-      :maximum -> Lora.Contracts.Maximum
-      :queens -> Lora.Contracts.Queens
-      :hearts -> Lora.Contracts.Hearts
-      :jack_of_clubs -> Lora.Contracts.JackOfClubs
-      :king_hearts_last_trick -> Lora.Contracts.KingHeartsLastTrick
-      :lora -> Lora.Contracts.Lora
-    end
   end
 
   @doc """
