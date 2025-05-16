@@ -71,6 +71,7 @@ defmodule LoraWeb.DeckCompoents do
   attr :rank, :atom, required: true
   attr :size, :string, default: "medium"
   attr :class, :string, default: ""
+  attr :id, :string, default: nil
 
   def card_front(assigns) do
     assigns =
@@ -80,6 +81,7 @@ defmodule LoraWeb.DeckCompoents do
 
     ~H"""
     <div
+      id={@id}
       class={"card-stacked relative #{@card_height} #{@card_width} rounded-lg border-0 flex p-0 items-center justify-center bg-transparent " <> @class}
       style={"background-image: url(#{~p"/images/fronts/#{@image}"}); background-size: contain; background-repeat: no-repeat; background-color: transparent;"}
     >
