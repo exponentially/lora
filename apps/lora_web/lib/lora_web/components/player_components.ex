@@ -3,6 +3,19 @@ defmodule LoraWeb.PlayerComponents do
   import LoraWeb.GameUtils
   import LoraWeb.DeckCompoents
   import LoraWeb.CoreComponents
+
+  @type card_stack_assigns :: %{
+          player_seat: non_neg_integer(),
+          game: map(),
+          size: :small | :medium | :large
+        }
+
+  @doc """
+  Renders a player's info plate in a card game UI. Shows player name, online status,
+  score, and indicates if they're the current player. Adapts to different sizes.
+
+  The plate is only displayed for opponents; the current user's info is shown elsewhere.
+  """
   attr :player, :map, required: true
   attr :game, :map, required: true
   attr :presences, :map, required: true
@@ -41,66 +54,47 @@ defmodule LoraWeb.PlayerComponents do
         assigns,
         :outer_class,
         case assigns.size do
-          "small" ->
-            "bg-gray-900/80 rounded-lg px-4 py-2 mb-4 shadow-xl backdrop-blur-md border border-gray-700/50 w-full"
-
-          "medium" ->
-            "bg-gray-900/80 rounded-lg px-5 py-2 mb-4 shadow-xl backdrop-blur-md border border-gray-700/50 w-80"
-
-          "large" ->
-            "bg-gray-900/80 rounded-lg px-5 py-3 mb-4 shadow-xl backdrop-blur-md border border-gray-700/50 w-full"
+          "small" -> "px-4 py-2 w-full"
+          "medium" -> "px-5 py-2 w-80"
+          "large" -> "px-5 py-3 w-full"
         end
       )
 
     assigns =
-      assign(
-        assigns,
-        :name_class,
-        case assigns.size do
-          "small" -> "text-base font-bold text-white"
-          "medium" -> "text-lg font-bold text-white"
-          "large" -> "text-xl font-bold text-white"
-        end
-      )
+      case assigns.size do
+        "small" ->
+          assign(
+            assigns,
+            name_class: "text-base",
+            score_box_class: "px-2 py-1.5",
+            score_text_class: "text-base",
+            status_size: "w-2.5 h-2.5"
+          )
 
-    assigns =
-      assign(
-        assigns,
-        :score_box_class,
-        case assigns.size do
-          "small" -> "bg-gray-800 px-2 py-1.5 rounded-lg border border-gray-700"
-          "medium" -> "bg-gray-800 px-3 py-2 rounded-lg border border-gray-700"
-          "large" -> "bg-gray-800 px-4 py-2.5 rounded-lg border border-gray-700"
-        end
-      )
+        "medium" ->
+          assign(
+            assigns,
+            name_class: "text-lg",
+            score_box_class: "px-3 py-2",
+            score_text_class: "text-xl",
+            status_size: "w-3 h-3"
+          )
 
-    assigns =
-      assign(
-        assigns,
-        :score_text_class,
-        case assigns.size do
-          "small" -> "text-base font-bold text-white"
-          "medium" -> "text-xl font-bold text-white"
-          "large" -> "text-2xl font-bold text-white"
-        end
-      )
-
-    assigns =
-      assign(
-        assigns,
-        :status_size,
-        case assigns.size do
-          "small" -> "w-2.5 h-2.5"
-          "medium" -> "w-3 h-3"
-          "large" -> "w-3.5 h-3.5"
-        end
-      )
+        "large" ->
+          assign(
+            assigns,
+            name_class: "text-xl",
+            score_box_class: "px-4 py-2.5",
+            score_text_class: "text-2xl",
+            status_size: "w-3.5 h-3.5"
+          )
+      end
 
     ~H"""
-    <div class={@outer_class}>
+    <div class={ "bg-gray-900/80 rounded-lg  mb-4 shadow-xl backdrop-blur-md border border-gray-700/50 " <> @outer_class}>
       <div class="flex items-center justify-between">
         <div>
-          <span class={@name_class <> " flex items-center gap-2"}>
+          <span class={@name_class <> " font-bold text-white flex items-center gap-2"}>
             <%= if @current_player do %>
               <.icon name="hero-bookmark-solid" class="text-yellow-500" />
             <% end %>
@@ -110,24 +104,36 @@ defmodule LoraWeb.PlayerComponents do
             <span class="line-clamp-1" title={@player_name}>{@player_name}</span>
           </span>
         </div>
-        <div class={@score_box_class}>
-          <span class={@score_text_class}>{@score}</span>
+        <div class={"bg-gray-800 rounded-lg border border-gray-700 " <> @score_box_class}>
+          <span class={"font-bold text-white " <> @score_text_class}>{@score}</span>
         </div>
       </div>
     </div>
     """
   end
 
+  @doc """
+  Renders a card stack for a player in a card game UI.
+
+  ## Attributes
+
+  * `player_seat` - The seat number of the player whose cards should be displayed
+  * `game` - The game state containing hands, phases, and other game information
+  * `size` - The size of the card stack: "small", "medium", or "large" (default: "medium")
+
+  ## Examples
+
+      <.card_stack player_seat={1} game={@game} size="medium" />
+  """
   attr :player_seat, :integer, required: true
   attr :game, :map, required: true
   # "small", "medium", or "large"
   attr :size, :string, default: "medium"
-
+  @spec card_stack(card_stack_assigns()) :: Phoenix.LiveView.Rendered.t()
   def card_stack(assigns) do
     assigns =
       assigns
       |> assign(:hand, Map.get(assigns.game.hands, assigns.player_seat, []))
-      |> assign(:hand_size, length(Map.get(assigns.game.hands, assigns.player_seat, [])))
       |> assign_stack_styles()
       |> assign(:debug, Mix.env() == :dev)
 
@@ -153,19 +159,16 @@ defmodule LoraWeb.PlayerComponents do
       "small" ->
         assigns
         |> assign(:width, "w-full")
-        |> assign(:height, "h-36")
         |> assign(:fanHeight, 180)
 
       "large" ->
         assigns
         |> assign(:width, "w-full")
-        |> assign(:height, "h-52")
         |> assign(:fanHeight, 260)
 
       _medium ->
         assigns
         |> assign(:width, "w-full")
-        |> assign(:height, "h-44")
         |> assign(:fanHeight, 220)
     end
   end
