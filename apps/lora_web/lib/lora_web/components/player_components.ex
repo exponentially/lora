@@ -1,7 +1,8 @@
 defmodule LoraWeb.PlayerComponents do
   use Phoenix.Component
   import LoraWeb.GameUtils
-
+  import LoraWeb.DeckCompoents
+  import LoraWeb.CoreComponents
   attr :player, :map, required: true
   attr :game, :map, required: true
   attr :presences, :map, required: true
@@ -41,13 +42,13 @@ defmodule LoraWeb.PlayerComponents do
         :outer_class,
         case assigns.size do
           "small" ->
-            "bg-white/90 rounded-lg px-4 py-3 mb-4 shadow-xl backdrop-blur-md border border-white/30 w-full"
+            "bg-gray-900/80 rounded-lg px-4 py-2 mb-4 shadow-xl backdrop-blur-md border border-gray-700/50 w-full"
 
           "medium" ->
-            "bg-white/90 rounded-lg px-5 py-3 mb-4 shadow-xl backdrop-blur-md border border-white/30 w-80"
+            "bg-gray-900/80 rounded-lg px-5 py-2 mb-4 shadow-xl backdrop-blur-md border border-gray-700/50 w-80"
 
           "large" ->
-            "bg-white/90 rounded-lg px-5 py-4 mb-4 shadow-xl backdrop-blur-md border border-white/30 w-full"
+            "bg-gray-900/80 rounded-lg px-5 py-3 mb-4 shadow-xl backdrop-blur-md border border-gray-700/50 w-full"
         end
       )
 
@@ -56,9 +57,9 @@ defmodule LoraWeb.PlayerComponents do
         assigns,
         :name_class,
         case assigns.size do
-          "small" -> "text-base font-bold text-gray-800"
-          "medium" -> "text-lg font-bold text-gray-800"
-          "large" -> "text-xl font-bold text-gray-800"
+          "small" -> "text-base font-bold text-white"
+          "medium" -> "text-lg font-bold text-white"
+          "large" -> "text-xl font-bold text-white"
         end
       )
 
@@ -67,9 +68,9 @@ defmodule LoraWeb.PlayerComponents do
         assigns,
         :score_box_class,
         case assigns.size do
-          "small" -> "bg-indigo-100 px-2 py-1.5 rounded-lg border border-indigo-200"
-          "medium" -> "bg-indigo-100 px-3 py-2 rounded-lg border border-indigo-200"
-          "large" -> "bg-indigo-100 px-4 py-2.5 rounded-lg border border-indigo-200"
+          "small" -> "bg-gray-800 px-2 py-1.5 rounded-lg border border-gray-700"
+          "medium" -> "bg-gray-800 px-3 py-2 rounded-lg border border-gray-700"
+          "large" -> "bg-gray-800 px-4 py-2.5 rounded-lg border border-gray-700"
         end
       )
 
@@ -78,9 +79,9 @@ defmodule LoraWeb.PlayerComponents do
         assigns,
         :score_text_class,
         case assigns.size do
-          "small" -> "text-base font-bold text-indigo-700"
-          "medium" -> "text-xl font-bold text-indigo-700"
-          "large" -> "text-2xl font-bold text-indigo-700"
+          "small" -> "text-base font-bold text-white"
+          "medium" -> "text-xl font-bold text-white"
+          "large" -> "text-2xl font-bold text-white"
         end
       )
 
@@ -100,32 +101,14 @@ defmodule LoraWeb.PlayerComponents do
       <div class="flex items-center justify-between">
         <div>
           <span class={@name_class <> " flex items-center gap-2"}>
-            {@player_name}
-            <%= if @is_online do %>
-              <span class={"inline-block #{@status_size} bg-green-500 rounded-full"} title="Online">
-              </span>
-            <% else %>
-              <span class={"inline-block #{@status_size} bg-red-500 rounded-full"} title="Offline">
-              </span>
+            <%= if @current_player do %>
+              <.icon name="hero-bookmark-solid" class="text-yellow-500" />
             <% end %>
+            <%= unless @is_online do %>
+              <span class="loading loading-ball loading-sm bg-red-500"></span>
+            <% end %>
+            <span class="line-clamp-1" title={@player_name}>{@player_name}</span>
           </span>
-          <%= if @current_player do %>
-            <span class="inline-flex items-center gap-1 mt-1 text-sm font-medium text-green-600">
-              <svg
-                class="h-4 w-4"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-              Current turn
-            </span>
-          <% end %>
         </div>
         <div class={@score_box_class}>
           <span class={@score_text_class}>{@score}</span>
@@ -143,18 +126,22 @@ defmodule LoraWeb.PlayerComponents do
   def card_stack(assigns) do
     assigns =
       assigns
+      |> assign(:hand, Map.get(assigns.game.hands, assigns.player_seat, []))
       |> assign(:hand_size, length(Map.get(assigns.game.hands, assigns.player_seat, [])))
       |> assign_stack_styles()
+      |> assign(:debug, Mix.env() == :dev)
 
     ~H"""
     <%= if assigns.game.phase == :playing do %>
-      <div class={"relative #{@width} #{@height}"}>
-        <div class={"absolute top-0 left-0 #{@card_height} #{@card_width} bg-gradient-to-br from-blue-800 to-blue-900 rounded-lg shadow-xl border border-blue-700 transform -rotate-6"}>
-        </div>
-        <div class={"absolute top-0 #{@spacing} #{@card_height} #{@card_width} bg-gradient-to-br from-blue-800 to-blue-900 rounded-lg shadow-xl border border-blue-700 transform -rotate-3"}>
-        </div>
-        <div class={"absolute top-0 #{@spacing} #{@spacing} #{@card_height} #{@card_width} bg-gradient-to-br from-blue-800 to-blue-900 rounded-lg shadow-xl border border-blue-700 flex items-center justify-center"}>
-          <span class={"#{@text_size} font-bold text-white select-none"}>{@hand_size}</span>
+      <div class={"relative #{@width} overflow-visible"}>
+        <div class={"card-fan size-#{@size} flex justify-center"} style="min-height: #{@fanHeight}px;">
+          <%= for {{suit, rank}, index} <- Enum.with_index(@hand) do %>
+            <%= if @debug do %>
+              <.card_front suit={suit} rank={rank} class={"z-#{index}"} />
+            <% else %>
+              <.card_back class={"z-#{index}"} />
+            <% end %>
+          <% end %>
         </div>
       </div>
     <% end %>
@@ -165,30 +152,21 @@ defmodule LoraWeb.PlayerComponents do
     case assigns.size do
       "small" ->
         assigns
-        |> assign(:width, "w-24")
-        |> assign(:height, "h-24")
-        |> assign(:card_width, "w-16")
-        |> assign(:card_height, "h-24")
-        |> assign(:text_size, "text-lg")
-        |> assign(:spacing, "left-3")
-
-      "medium" ->
-        assigns
-        |> assign(:width, "w-32")
-        |> assign(:height, "h-28")
-        |> assign(:card_width, "w-20")
-        |> assign(:card_height, "h-28")
-        |> assign(:text_size, "text-2xl")
-        |> assign(:spacing, "left-6")
+        |> assign(:width, "w-full")
+        |> assign(:height, "h-36")
+        |> assign(:fanHeight, 180)
 
       "large" ->
         assigns
-        |> assign(:width, "w-36")
-        |> assign(:height, "h-32")
-        |> assign(:card_width, "w-24")
-        |> assign(:card_height, "h-32")
-        |> assign(:text_size, "text-3xl")
-        |> assign(:spacing, "left-8")
+        |> assign(:width, "w-full")
+        |> assign(:height, "h-52")
+        |> assign(:fanHeight, 260)
+
+      _medium ->
+        assigns
+        |> assign(:width, "w-full")
+        |> assign(:height, "h-44")
+        |> assign(:fanHeight, 220)
     end
   end
 end

@@ -1,4 +1,8 @@
-<div class="min-h-screen w-full bg-gradient-to-br from-green-900 via-green-800 to-emerald-900 p-6">
+<div
+  class="min-h-screen w-full bg-raidal-spotlight p-6"
+  id="game-container"
+  phx-hook="TrickWinnerDelay"
+>
   <%= if @loading do %>
     <div class="text-center py-24">
       <div class="inline-flex items-center px-6 py-3 bg-white/20 backdrop-blur-md rounded-xl">
@@ -57,7 +61,7 @@
                 <% opponent_seat_top = opponent_seats.top %>
 
                 <div class="flex flex-col items-center">
-                  <.player_plate
+                  <LoraWeb.PlayerComponents.player_plate
                     player={@player}
                     game={@game}
                     presences={@presences}
@@ -78,7 +82,7 @@
                   <% opponent_seat_left = opponent_seats.left %>
 
                   <div class="flex flex-col items-center">
-                    <.player_plate
+                    <LoraWeb.PlayerComponents.player_plate
                       player={@player}
                       game={@game}
                       presences={@presences}
@@ -91,7 +95,10 @@
                 </div>
                 
 <!-- Center - Current trick or Lora layout -->
-                <div class="w-2/4 bg-green-900/70 backdrop-blur-md rounded-xl shadow-2xl p-4 min-h-[320px] border border-emerald-700/50">
+                <div
+                  class="bg-green-900/1 rounded-full backdrop-blur-md shadow-[0_50px_60px_-15px_rgba(0,0,0,0.3)] p-4 size-[520px]"
+                  style="transform: rotate3d(-1,0.5,0.5,60deg);"
+                >
                   <%= if @current_contract == :lora do %>
                     <div class="text-white text-center font-semibold mb-3">Lora Layout</div>
                     <div class="grid grid-cols-1 gap-3">
@@ -110,22 +117,98 @@
                     </div>
                   <% else %>
                     <div class="text-white text-center font-semibold mb-3">Current Trick</div>
-                    <div class="grid grid-cols-2 grid-rows-2 gap-6 h-full py-4">
-                      <%= for seat <- 1..4 do %>
-                        <div class="flex items-center justify-center">
-                          <% trick_card = Enum.find(@game.trick, fn {s, _} -> s == seat end) %>
-                          <%= if trick_card do %>
-                            <% {_, {suit, rank}} = trick_card %>
-                            <div class={"card flex items-center justify-center h-28 w-20 bg-white rounded-lg shadow-2xl #{suit_color(suit)}"}>
-                              <span class="text-2xl font-bold">{format_rank(rank)}</span>
-                              <span class="absolute top-1 left-1 text-sm">
-                                {format_suit(suit)}
-                              </span>
-                              <span class="absolute bottom-1 right-1 text-sm transform rotate-180">
-                                {format_suit(suit)}
-                              </span>
-                            </div>
-                          <% end %>
+                    <div class="relative h-full py-4">
+                      <% opponent_seats = LoraWeb.GameUtils.calculate_opponent_seats(@player.seat) %>
+                      <% # Determine if we have a complete trick (4 cards)
+                      trick_complete = length(@game.trick) == 4
+
+                      # Calculate the winner if trick is complete
+                      winner_seat =
+                        if trick_complete, do: Lora.Deck.trick_winner(@game.trick), else: nil
+
+                      # Helper function to determine if a card is the winner
+                      is_winning_card = fn seat -> trick_complete && seat == winner_seat end %>
+                      
+<!-- Bottom/Player's card (current player) -->
+                      <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+                        <% trick_card = Enum.find(@game.trick, fn {s, _} -> s == @player.seat end) %>
+                        <%= if trick_card do %>
+                          <% {_, {suit, rank}} = trick_card %>
+                          <.card_front
+                            suit={suit}
+                            rank={rank}
+                            class={"animate-in card-throw-bottom #{if is_winning_card.(@player.seat), do: "winner-card", else: ""}"}
+                            id={"trick-card-#{@player.seat}-#{suit}-#{rank}"}
+                          />
+                        <% end %>
+                      </div>
+                      
+<!-- Top opponent's card -->
+                      <div class="absolute top-4 left-1/2 transform -translate-x-1/2">
+                        <% trick_card =
+                          Enum.find(@game.trick, fn {s, _} -> s == opponent_seats.top end) %>
+                        <%= if trick_card do %>
+                          <% {_, {suit, rank}} = trick_card %>
+                          <.card_front
+                            suit={suit}
+                            rank={rank}
+                            class={"animate-in card-throw-top #{if is_winning_card.(opponent_seats.top), do: "winner-card", else: ""}"}
+                            id={"trick-card-#{opponent_seats.top}-#{suit}-#{rank}"}
+                          />
+                        <% end %>
+                      </div>
+                      
+<!-- Left opponent's card -->
+                      <div class="absolute top-1/2 left-4 transform -translate-y-1/2">
+                        <% trick_card =
+                          Enum.find(@game.trick, fn {s, _} -> s == opponent_seats.left end) %>
+                        <%= if trick_card do %>
+                          <% {_, {suit, rank}} = trick_card %>
+                          <.card_front
+                            suit={suit}
+                            rank={rank}
+                            class={"animate-in card-throw-left #{if is_winning_card.(opponent_seats.left), do: "winner-card", else: ""}"}
+                            id={"trick-card-#{opponent_seats.left}-#{suit}-#{rank}"}
+                          />
+                        <% end %>
+                      </div>
+                      
+<!-- Right opponent's card -->
+                      <div class="absolute top-1/2 right-4 transform -translate-y-1/2">
+                        <% trick_card =
+                          Enum.find(@game.trick, fn {s, _} -> s == opponent_seats.right end) %>
+                        <%= if trick_card do %>
+                          <% {_, {suit, rank}} = trick_card %>
+                          <.card_front
+                            suit={suit}
+                            rank={rank}
+                            class={"animate-in card-throw-right #{if is_winning_card.(opponent_seats.right), do: "winner-card", else: ""}"}
+                            id={"trick-card-#{opponent_seats.right}-#{suit}-#{rank}"}
+                          />
+                        <% end %>
+                      </div>
+                      
+<!-- Player plates with highlighting for winner -->
+                      <%= if trick_complete do %>
+                        <div
+                          id="player-highlight-bottom"
+                          class={"absolute -bottom-5 left-1/2 transform -translate-x-1/2 w-32 h-1 rounded-full opacity-0 #{if winner_seat == @player.seat, do: "winner-highlight", else: ""}"}
+                        >
+                        </div>
+                        <div
+                          id="player-highlight-top"
+                          class={"absolute -top-5 left-1/2 transform -translate-x-1/2 w-32 h-1 rounded-full opacity-0 #{if winner_seat == opponent_seats.top, do: "winner-highlight", else: ""}"}
+                        >
+                        </div>
+                        <div
+                          id="player-highlight-left"
+                          class={"absolute top-1/2 -left-5 transform -translate-y-1/2 h-32 w-1 rounded-full opacity-0 #{if winner_seat == opponent_seats.left, do: "winner-highlight", else: ""}"}
+                        >
+                        </div>
+                        <div
+                          id="player-highlight-right"
+                          class={"absolute top-1/2 -right-5 transform -translate-y-1/2 h-32 w-1 rounded-full opacity-0 #{if winner_seat == opponent_seats.right, do: "winner-highlight", else: ""}"}
+                        >
                         </div>
                       <% end %>
                     </div>
@@ -137,7 +220,7 @@
                   <% opponent_seat_right = opponent_seats.right %>
 
                   <div class="flex flex-col items-center">
-                    <.player_plate
+                    <LoraWeb.PlayerComponents.player_plate
                       player={@player}
                       game={@game}
                       presences={@presences}
@@ -306,6 +389,170 @@
     }
     .card:hover span {
       transform: scale(1.05);
+    }
+
+    /* Card throwing animations */
+    @keyframes throw-from-bottom {
+      0% { 
+        transform: translateY(120px) translateX(20px) rotate(8deg); 
+        opacity: 0;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      }
+      30% {
+        transform: translateY(30px) translateX(5px) rotate(3deg);
+        opacity: 0.8;
+        box-shadow: 0 15px 25px rgba(0, 0, 0, 0.3);
+      }
+      100% { 
+        transform: translateY(0) translateX(0) rotate(0deg); 
+        opacity: 1;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      }
+    }
+
+    @keyframes throw-from-top {
+      0% { 
+        transform: translateY(-120px) translateX(-15px) rotate(-10deg); 
+        opacity: 0;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      }
+      30% {
+        transform: translateY(-30px) translateX(-5px) rotate(-5deg);
+        opacity: 0.8;
+        box-shadow: 0 15px 25px rgba(0, 0, 0, 0.3);
+      }
+      100% { 
+        transform: translateY(0) translateX(0) rotate(0deg);
+        opacity: 1;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      }
+    }
+
+    @keyframes throw-from-left {
+      0% { 
+        transform: translateY(15px) translateX(-120px) rotate(-20deg); 
+        opacity: 0;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      }
+      30% {
+        transform: translateY(5px) translateX(-30px) rotate(-10deg);
+        opacity: 0.8;
+        box-shadow: 0 15px 25px rgba(0, 0, 0, 0.3);
+      }
+      100% { 
+        transform: translateY(0) translateX(0) rotate(0deg);
+        opacity: 1;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      }
+    }
+
+    @keyframes throw-from-right {
+      0% { 
+        transform: translateY(-10px) translateX(120px) rotate(20deg); 
+        opacity: 0;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      }
+      30% {
+        transform: translateY(-5px) translateX(30px) rotate(10deg);
+        opacity: 0.8;
+        box-shadow: 0 15px 25px rgba(0, 0, 0, 0.3);
+      }
+      100% { 
+        transform: translateY(0) translateX(0) rotate(0deg);
+        opacity: 1;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      }
+    }
+
+    .card-throw-bottom {
+      animation: throw-from-bottom 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      animation-delay: 0.05s;
+      z-index: 10;
+      transform-origin: center bottom;
+    }
+
+    .card-throw-top {
+      animation: throw-from-top 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      animation-delay: 0.1s;
+      z-index: 10;
+      transform-origin: center top;
+    }
+
+    .card-throw-left {
+      animation: throw-from-left 0.75s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      animation-delay: 0.15s;
+      z-index: 10;
+      transform-origin: left center;
+    }
+
+    .card-throw-right {
+      animation: throw-from-right 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      animation-delay: 0.2s;
+      z-index: 10;
+      transform-origin: right center;
+    }
+
+    /* Add a fade-in-only animation for when cards appear without throwing animation */
+    @keyframes fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .animate-in {
+      opacity: 0;
+      animation: fade-in 0.3s ease-out forwards;
+    }
+
+    /* Trick winner animation */
+    @keyframes winner-glow {
+      0% { 
+        box-shadow: 0 0 5px #facc15, 0 0 10px #facc15, 0 0 15px #facc15;
+        transform: scale(1);
+      }
+      50% { 
+        box-shadow: 0 0 10px #facc15, 0 0 20px #facc15, 0 0 30px #facc15; 
+        transform: scale(1.05);
+      }
+      100% { 
+        box-shadow: 0 0 5px #facc15, 0 0 10px #facc15, 0 0 15px #facc15;
+        transform: scale(1);
+      }
+    }
+
+    @keyframes highlight-pulse {
+      0% { opacity: 0.4; }
+      50% { opacity: 0.9; }
+      100% { opacity: 0.4; }
+    }
+
+    @keyframes fade-out {
+      0% { opacity: 1; }
+      100% { opacity: 0; transform: scale(0.8); }
+    }
+
+    .winner-card {
+      animation: throw-from-bottom 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      z-index: 20;
+    }
+
+    .winner-glow-active {
+      animation: winner-glow 2s ease-in-out;
+      box-shadow: 0 0 10px #facc15, 0 0 20px #facc15, 0 0 30px #facc15;
+    }
+
+    .winner-highlight {
+      background-color: #facc15; /* yellow-500 */
+      opacity: 0;
+      box-shadow: 0 0 10px 2px #facc15;
+    }
+
+    .highlight-active {
+      animation: highlight-pulse 2s ease-in-out;
+      opacity: 0.7;
+    }
+
+    .fade-out {
+      animation: fade-out 0.5s ease-out forwards;
     }
   </style>
 </div>
