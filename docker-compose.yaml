@@ -1,0 +1,3 @@
+services:
+  lora:
+    image: ${APP_IMAGE:-gcr.io/exponentially/lora:latest}

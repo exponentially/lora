@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main, master, develop]
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
 jobs:
   test:
     name: Build and Test
@@ -72,6 +76,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Generate version
+        id: version
+        run: |
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-8)
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          echo "docker_version=${TIMESTAMP}-${SHORT_SHA}" >> $GITHUB_OUTPUT
+
       # Only login to registry if we're on main branch
       - name: Log in to GitHub Container Registry
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -88,15 +99,15 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./${{ env.PROJECT_NAME }}/Dockerfile
+          file: ./Dockerfile
           platforms: linux/amd64
           # Only push if we're on main branch
           push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.setup-version.outputs.docker_version }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.docker_version }}
             ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && format('{0}/{1}:latest', env.REGISTRY, env.IMAGE_NAME) || '' }}
           labels: |
-            org.opencontainers.image.version=${{ needs.setup-version.outputs.docker_version }}
+            org.opencontainers.image.version=${{ steps.version.outputs.docker_version }}
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
           build-args: |
             GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
@@ -109,7 +120,7 @@ jobs:
         id: save-image-tag
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          IMAGE_TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.setup-version.outputs.docker_version }}"
+          IMAGE_TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.docker_version }}"
           echo "$IMAGE_TAG" > build-info.txt
           echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
       - name: Upload build info
