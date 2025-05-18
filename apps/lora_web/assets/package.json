@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "deploy": "echo 'Assets will be built by mix assets.deploy'"
+  },
   "devDependencies": {
     "daisyui": "^4.12.23"
   }

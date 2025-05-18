@@ -2,7 +2,6 @@ defmodule LoraWeb.CurrentTrickComponent do
   use Phoenix.Component
   use Gettext, backend: LoraWeb.Gettext
   use LoraWeb, :verified_routes
-  import LoraWeb.CoreComponents
 
   attr :game, :map, required: true
   attr :seat, :integer, required: true

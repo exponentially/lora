@@ -106,12 +106,15 @@ defmodule Lora do
       game.phase == :lobby and length(game.players) < 4
     end)
     |> Enum.map(fn {id, game} ->
+      first_player = List.first(game.players)
+      creator_name = if first_player, do: first_player.name, else: "Unknown"
+
       %{
         id: id,
         players: Enum.map(game.players, & &1.name),
         player_count: length(game.players),
         created_at: Map.get(game, :created_at, DateTime.utc_now()),
-        creator: List.first(game.players).name
+        creator: creator_name
       }
     end)
   end

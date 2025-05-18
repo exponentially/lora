@@ -166,7 +166,7 @@ defmodule LoraWeb.PlayerComponents do
       assigns
       |> assign(:hand, Map.get(assigns.game.hands, assigns.player_seat, []))
       |> assign_stack_styles()
-      |> assign(:debug, Mix.env() == :dev)
+      |> assign(:debug, Application.get_env(:lora_web, :debug_mode, false))
 
     ~H"""
     <%= if assigns.game.phase == :playing do %>

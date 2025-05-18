@@ -15,9 +15,16 @@ defmodule Lora.Accounts.ETSAdapter do
   Initialize the ETS table for players.
   """
   def init do
-    :ets.new(@table_name, [:set, :public, :named_table])
-    schedule_cleanup()
-    :ok
+    case :ets.whereis(@table_name) do
+      :undefined ->
+        :ets.new(@table_name, [:set, :public, :named_table])
+        schedule_cleanup()
+        :ok
+
+      _ ->
+        # Table already exists
+        :ok
+    end
   end
 
   @impl true

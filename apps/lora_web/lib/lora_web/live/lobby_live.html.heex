@@ -94,7 +94,7 @@
               :let={f}
               id="join-game-form"
               for={%{}}
-              as={:join_player}
+              as={:join_game}
               phx-submit="join_game"
               phx-change="validate"
             >
@@ -163,7 +163,12 @@
                 </div>
                 <div class="card-actions justify-end mt-2">
                   <.form :let={f} for={%{}} as={:join_game} phx-submit="join_game">
-                    <.input type="hidden" field={f[:game_code]} value={game.id} />
+                    <.input
+                      type="hidden"
+                      field={f[:game_code]}
+                      id={"game_code_#{game.id}"}
+                      value={game.id}
+                    />
                     <button type="submit" class="btn btn-sm btn-secondary">
                       Join
                     </button>
