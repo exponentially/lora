@@ -95,7 +95,10 @@ defmodule LoraWeb.PlayerComponents do
     <div class={"stats shadow-2xl border-2 border-gray-700 " <> if @current_player, do: "current-player", else: "" }>
       <div :if={@is_dealer} class="stat ">
         <div class="stat-title">Dealer</div>
-        <div class="stat-value">🎲</div>
+        <%!-- <div class="stat-value">🎲</div> --%>
+        <div class="stat-value">
+          <.icon name="hero-square-3-stack-3d-solid" class=" size-[40px1]" />
+        </div>
         <div class="stat-desc text-secondary line-clamp-1"></div>
       </div>
       <div class="stat w-[250px]">

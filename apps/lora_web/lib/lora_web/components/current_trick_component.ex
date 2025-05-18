@@ -2,6 +2,7 @@ defmodule LoraWeb.CurrentTrickComponent do
   use Phoenix.Component
   use Gettext, backend: LoraWeb.Gettext
   use LoraWeb, :verified_routes
+  import LoraWeb.CoreComponents
 
   attr :game, :map, required: true
   attr :seat, :integer, required: true
@@ -14,13 +15,16 @@ defmodule LoraWeb.CurrentTrickComponent do
       |> assign(trick_card: Enum.find(assigns.game.trick, fn {s, _} -> s == assigns.seat end))
 
     ~H"""
-    <div class={@class}>
+    <div
+      class={"border-dashed border-4 rounded-lg p-1 " <> @class}
+      style="border-color: rgba(255,241,75, 0.5); width: 8rem; height: 11rem;"
+    >
       <%= if @trick_card do %>
         <% {_, {suit, rank}} = @trick_card %>
         <LoraWeb.DeckCompoents.card_front
           suit={suit}
           rank={rank}
-          class={"animate-in card-throw-right #{if is_winning_card?(@game, @seat), do: "winner-card", else: ""}"}
+          class={"shadow-md #{if is_winning_card?(@game, @seat), do: "winner-card", else: ""}"}
           id={"trick-card-#{@seat}-#{suit}-#{rank}"}
         />
       <% end %>
@@ -57,7 +61,7 @@ defmodule LoraWeb.CurrentTrickComponent do
       <% else %>
         <div class="relative h-full py-4 flex items-center justify-center">
           <div class="text-center font-semibold mb-3 text-3xl text-yellow-300">
-            Current Trick
+            {Lora.Contract.name(@current_contract)}
           </div>
           <% opponent_seats = LoraWeb.GameUtils.calculate_opponent_seats(@player.seat) %>
           <%= for {seat, class} <- [
