@@ -28,6 +28,52 @@ defmodule LoraWeb.CurrentTrickComponent do
     """
   end
 
+  attr :game, :map, required: true
+  attr :player, :map, required: true
+  attr :current_contract, :atom, required: true
+
+  def current_trick(assigns) do
+    ~H"""
+    <div
+      class="bg-green-900/1 rounded-full backdrop-blur-md shadow-[0_50px_60px_-15px_rgba(0,0,0,0.3)] p-4 size-[520px]"
+      style="transform: rotate3d(-1,0.5,0.5,60deg);"
+    >
+      <%= if @current_contract == :lora do %>
+        <div class="text-white text-center font-semibold mb-3">Lora Layout</div>
+        <div class="grid grid-cols-1 gap-3">
+          <%= for suit <- [:clubs, :diamonds, :hearts, :spades] do %>
+            <div class="flex items-center">
+              <div class="w-6 text-white text-xl">{LoraWeb.CardUtils.format_suit(suit)}</div>
+              <div class="flex flex-grow overflow-x-auto">
+                <%= for {card_suit, rank} <- @game.lora_layout[suit] || [] do %>
+                  <div class={"card-mini flex items-center justify-center h-10 w-8 bg-white rounded-md mr-1 shadow-md #{LoraWeb.CardUtils.suit_color(card_suit)}"}>
+                    {LoraWeb.CardUtils.format_rank(rank)}
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="relative h-full py-4 flex items-center justify-center">
+          <div class="text-center font-semibold mb-3 text-3xl text-yellow-300">
+            Current Trick
+          </div>
+          <% opponent_seats = LoraWeb.GameUtils.calculate_opponent_seats(@player.seat) %>
+          <%= for {seat, class} <- [
+            {@player.seat, "absolute transform -translate-x-1/2 bottom-4 left-1/2"},
+            {opponent_seats.top, "absolute transform -translate-x-1/2 top-4 left-1/2"},
+            {opponent_seats.left, "absolute transform -translate-y-1/2 top-1/2 left-4"},
+            {opponent_seats.right, "absolute transform -translate-y-1/2 top-1/2 right-4"}
+          ] do %>
+            <.current_trick_card class={class} seat={seat} game={@game} />
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+    """
+  end
+
   defp is_winning_card?(game, seat) do
     # Determine if we have a complete trick (4 cards)
     trick_complete = length(game.trick) == 4

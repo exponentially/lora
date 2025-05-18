@@ -8,7 +8,6 @@ defmodule LoraWeb.GameLive do
   alias LoraWeb.Presence
   import LoraWeb.PlayerComponents
   import LoraWeb.CurrentPlayerComponents
-  import LoraWeb.CardUtils
   import LoraWeb.GameUtils
   import LoraWeb.CurrentTrickComponent
 
