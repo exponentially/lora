@@ -5,6 +5,65 @@
 
 /* This file is for your main application CSS */
 
+/* Animation for current player - emits waves */
+.current-player {
+    position: relative;
+    overflow: visible;
+}
+
+/* First wave */
+.current-player .current-user-wave-3 {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    animation: emit-waves 3s infinite linear;
+    animation-delay: 0s;
+}
+
+/* Second wave */
+.current-player .current-user-wave-2 {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    animation: emit-waves 3s infinite linear;
+    animation-delay: 1s;
+}
+
+/* Third wave - using a span element to create a third wave */
+.current-player .current-user-wave-1 {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    animation: emit-waves 3s infinite linear;
+    animation-delay: 2s;
+}
+
+/* The waves animation */
+@keyframes emit-waves {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scale(2);
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0);
+        opacity: 0;
+    }
+}
+
 /* radial gradient startting from primary content  color toward predefeind table color  */
 .bg-raidal-spotlight {
     background:

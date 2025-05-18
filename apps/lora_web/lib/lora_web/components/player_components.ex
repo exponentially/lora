@@ -91,7 +91,7 @@ defmodule LoraWeb.PlayerComponents do
       end
 
     ~H"""
-    <div class="stats shadow-2xl w-[250px] border-2 border-gray-700">
+    <div class={"stats shadow-2xl w-[250px] border-2 border-gray-700 " <> if @current_player, do: "current-player", else: "" }>
       <div class="stat  ">
         <div class="stat-figure text-secondary">
           <div class="avatar indicator">
@@ -102,17 +102,19 @@ defmodule LoraWeb.PlayerComponents do
                 <span class="loading loading-bars loading-xs text-red-500"></span>
               <% end %>
             </span>
-            <div class="h-20 w-20 rounded-full text-gray-300">
-              <.icon name="hero-user-circle size-20" />
+            <div class="size-20 m-[-5px] rounded-full text-gray-300">
+              <.icon name="hero-user-circle size-20 p-0" />
+              <%= if @current_player do %>
+                <span class="current-user-wave-1"></span>
+                <span class="current-user-wave-2"></span>
+                <span class="current-user-wave-3"></span>
+              <% end %>
             </div>
           </div>
         </div>
         <div class="stat-title">Score</div>
         <div class="stat-value">{@score}</div>
         <div class="stat-desc text-secondary line-clamp-1" title={@player_name}>
-          <%= if @current_player do %>
-            <.icon name="hero-bookmark-solid size-4" class="text-yellow-500" />
-          <% end %>
           {@player_name}
         </div>
       </div>
