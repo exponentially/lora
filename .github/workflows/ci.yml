@@ -59,7 +59,7 @@ jobs:
 
   dockerize:
     name: Build and Publish Docker image
-    needs: [setup-version]
+    needs: [test]
     runs-on: ubuntu-latest
     # if: github.event.pull_request.merged == true
     permissions:
