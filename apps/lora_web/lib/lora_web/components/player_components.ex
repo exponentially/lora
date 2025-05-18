@@ -40,6 +40,7 @@ defmodule LoraWeb.PlayerComponents do
 
     assigns =
       assigns
+      |> assign(:is_dealer, assigns.game && assigns.game.dealer_seat == assigns.player_seat)
       |> assign(:player_name, find_player_name(assigns.game, assigns.player_seat))
       # Use seated_player to avoid conflicts with assigns.player
       |> assign(:seated_player, player)
@@ -91,8 +92,13 @@ defmodule LoraWeb.PlayerComponents do
       end
 
     ~H"""
-    <div class={"stats shadow-2xl w-[250px] border-2 border-gray-700 " <> if @current_player, do: "current-player", else: "" }>
-      <div class="stat  ">
+    <div class={"stats shadow-2xl border-2 border-gray-700 " <> if @current_player, do: "current-player", else: "" }>
+      <div :if={@is_dealer} class="stat ">
+        <div class="stat-title">Dealer</div>
+        <div class="stat-value">🎲</div>
+        <div class="stat-desc text-secondary line-clamp-1"></div>
+      </div>
+      <div class="stat w-[250px]">
         <div class="stat-figure text-secondary">
           <div class="avatar indicator">
             <span class="indicator-item top-[15px] right-[15px]">
