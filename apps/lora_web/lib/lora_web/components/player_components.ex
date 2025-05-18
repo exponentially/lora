@@ -91,24 +91,44 @@ defmodule LoraWeb.PlayerComponents do
       end
 
     ~H"""
-    <div class={ "bg-gray-900/80 rounded-lg  mb-4 shadow-xl backdrop-blur-md border border-gray-700/50 " <> @outer_class}>
-      <div class="flex items-center justify-between">
-        <div>
-          <span class={@name_class <> " font-bold text-white flex items-center gap-2"}>
-            <%= if @current_player do %>
-              <.icon name="hero-bookmark-solid" class="text-yellow-500" />
-            <% end %>
-            <%= unless @is_online do %>
-              <span class="loading loading-ball loading-sm bg-red-500"></span>
-            <% end %>
-            <span class="line-clamp-1" title={@player_name}>{@player_name}</span>
-          </span>
+    <div class="stats shadow-2xl w-[250px] border-2 border-gray-700">
+      <div class="stat  ">
+        <div class="stat-figure text-secondary">
+          <div class="avatar indicator">
+            <span class="indicator-item top-[15px] right-[15px]">
+              <%= if @is_online do %>
+                <span class="badge bg-green-500 size-5"></span>
+              <% else %>
+                <span class="loading loading-bars loading-xs text-red-500"></span>
+              <% end %>
+            </span>
+            <div class="h-20 w-20 rounded-full text-gray-300">
+              <.icon name="hero-user-circle size-20" />
+            </div>
+          </div>
         </div>
-        <div class={"bg-gray-800 rounded-lg border border-gray-700 " <> @score_box_class}>
-          <span class={"font-bold text-white " <> @score_text_class}>{@score}</span>
+        <div class="stat-title">Score</div>
+        <div class="stat-value">{@score}</div>
+        <div class="stat-desc text-secondary line-clamp-1" title={@player_name}>
+          <%= if @current_player do %>
+            <.icon name="hero-bookmark-solid size-4" class="text-yellow-500" />
+          <% end %>
+          {@player_name}
         </div>
       </div>
     </div>
+    """
+  end
+
+  attr :is_online, :boolean, required: true
+
+  def online_status(assigns) do
+    ~H"""
+    <%= if @is_online do %>
+      <span class="loading loading-bars loading-sm bg-red-500"></span>
+    <% else %>
+      <span class="loading loading-bars loading-sm bg-red-500"></span>
+    <% end %>
     """
   end
 
