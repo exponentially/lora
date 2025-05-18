@@ -56,41 +56,36 @@
             <!-- Game board - Centered layout with players around the center -->
             <div class="flex-grow flex flex-col items-center justify-between py-4">
               <% opponent_seats = LoraWeb.GameUtils.calculate_opponent_seats(@player.seat) %>
-              <!-- Top opponent -->
+              
+<!-- Top opponent -->
+              <% player_seat = opponent_seats.top %>
               <div class="w-full max-w-2xl mx-auto mb-6">
-                <% opponent_seat_top = opponent_seats.top %>
-
                 <div class="flex flex-col items-center">
                   <LoraWeb.PlayerComponents.player_plate
                     player={@player}
                     game={@game}
                     presences={@presences}
-                    player_seat={opponent_seat_top}
+                    player_seat={player_seat}
                     size="medium"
                   />
-
-                  <div class="flex justify-center">
-                    <.card_stack player_seat={opponent_seat_top} game={@game} size="medium" />
-                  </div>
+                  <.card_stack player_seat={player_seat} game={@game} size="medium" />
                 </div>
               </div>
               
 <!-- Middle row - Left player, Center area, Right player -->
               <div class="w-full flex items-start justify-between mb-8 gap-4">
                 <!-- Left player -->
+                <% player_seat = opponent_seats.left %>
                 <div class="w-1/4">
-                  <% opponent_seat_left = opponent_seats.left %>
-
                   <div class="flex flex-col items-center">
                     <LoraWeb.PlayerComponents.player_plate
                       player={@player}
                       game={@game}
                       presences={@presences}
-                      player_seat={opponent_seat_left}
-                      size="small"
+                      player_seat={player_seat}
+                      size="medium"
                     />
-
-                    <.card_stack player_seat={opponent_seat_left} game={@game} size="small" />
+                    <.card_stack player_seat={player_seat} game={@game} size="medium" />
                   </div>
                 </div>
                 
@@ -116,100 +111,18 @@
                       <% end %>
                     </div>
                   <% else %>
-                    <div class="text-white text-center font-semibold mb-3">Current Trick</div>
-                    <div class="relative h-full py-4">
+                    <div class="relative h-full py-4 flex items-center justify-center">
+                      <div class="text-center font-semibold mb-3 text-3xl text-yellow-300">
+                        Current Trick
+                      </div>
                       <% opponent_seats = LoraWeb.GameUtils.calculate_opponent_seats(@player.seat) %>
-                      <% # Determine if we have a complete trick (4 cards)
-                      trick_complete = length(@game.trick) == 4
-
-                      # Calculate the winner if trick is complete
-                      winner_seat =
-                        if trick_complete, do: Lora.Deck.trick_winner(@game.trick), else: nil
-
-                      # Helper function to determine if a card is the winner
-                      is_winning_card = fn seat -> trick_complete && seat == winner_seat end %>
-                      
-<!-- Bottom/Player's card (current player) -->
-                      <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2">
-                        <% trick_card = Enum.find(@game.trick, fn {s, _} -> s == @player.seat end) %>
-                        <%= if trick_card do %>
-                          <% {_, {suit, rank}} = trick_card %>
-                          <.card_front
-                            suit={suit}
-                            rank={rank}
-                            class={"animate-in card-throw-bottom #{if is_winning_card.(@player.seat), do: "winner-card", else: ""}"}
-                            id={"trick-card-#{@player.seat}-#{suit}-#{rank}"}
-                          />
-                        <% end %>
-                      </div>
-                      
-<!-- Top opponent's card -->
-                      <div class="absolute top-4 left-1/2 transform -translate-x-1/2">
-                        <% trick_card =
-                          Enum.find(@game.trick, fn {s, _} -> s == opponent_seats.top end) %>
-                        <%= if trick_card do %>
-                          <% {_, {suit, rank}} = trick_card %>
-                          <.card_front
-                            suit={suit}
-                            rank={rank}
-                            class={"animate-in card-throw-top #{if is_winning_card.(opponent_seats.top), do: "winner-card", else: ""}"}
-                            id={"trick-card-#{opponent_seats.top}-#{suit}-#{rank}"}
-                          />
-                        <% end %>
-                      </div>
-                      
-<!-- Left opponent's card -->
-                      <div class="absolute top-1/2 left-4 transform -translate-y-1/2">
-                        <% trick_card =
-                          Enum.find(@game.trick, fn {s, _} -> s == opponent_seats.left end) %>
-                        <%= if trick_card do %>
-                          <% {_, {suit, rank}} = trick_card %>
-                          <.card_front
-                            suit={suit}
-                            rank={rank}
-                            class={"animate-in card-throw-left #{if is_winning_card.(opponent_seats.left), do: "winner-card", else: ""}"}
-                            id={"trick-card-#{opponent_seats.left}-#{suit}-#{rank}"}
-                          />
-                        <% end %>
-                      </div>
-                      
-<!-- Right opponent's card -->
-                      <div class="absolute top-1/2 right-4 transform -translate-y-1/2">
-                        <% trick_card =
-                          Enum.find(@game.trick, fn {s, _} -> s == opponent_seats.right end) %>
-                        <%= if trick_card do %>
-                          <% {_, {suit, rank}} = trick_card %>
-                          <.card_front
-                            suit={suit}
-                            rank={rank}
-                            class={"animate-in card-throw-right #{if is_winning_card.(opponent_seats.right), do: "winner-card", else: ""}"}
-                            id={"trick-card-#{opponent_seats.right}-#{suit}-#{rank}"}
-                          />
-                        <% end %>
-                      </div>
-                      
-<!-- Player plates with highlighting for winner -->
-                      <%= if trick_complete do %>
-                        <div
-                          id="player-highlight-bottom"
-                          class={"absolute -bottom-5 left-1/2 transform -translate-x-1/2 w-32 h-1 rounded-full opacity-0 #{if winner_seat == @player.seat, do: "winner-highlight", else: ""}"}
-                        >
-                        </div>
-                        <div
-                          id="player-highlight-top"
-                          class={"absolute -top-5 left-1/2 transform -translate-x-1/2 w-32 h-1 rounded-full opacity-0 #{if winner_seat == opponent_seats.top, do: "winner-highlight", else: ""}"}
-                        >
-                        </div>
-                        <div
-                          id="player-highlight-left"
-                          class={"absolute top-1/2 -left-5 transform -translate-y-1/2 h-32 w-1 rounded-full opacity-0 #{if winner_seat == opponent_seats.left, do: "winner-highlight", else: ""}"}
-                        >
-                        </div>
-                        <div
-                          id="player-highlight-right"
-                          class={"absolute top-1/2 -right-5 transform -translate-y-1/2 h-32 w-1 rounded-full opacity-0 #{if winner_seat == opponent_seats.right, do: "winner-highlight", else: ""}"}
-                        >
-                        </div>
+                      <%= for {seat, class} <- [
+                        {@player.seat, "absolute transform -translate-x-1/2 bottom-4 left-1/2"},
+                        {opponent_seats.top, "absolute transform -translate-x-1/2 top-4 left-1/2"},
+                        {opponent_seats.left, "absolute transform -translate-y-1/2 top-1/2 left-4"},
+                        {opponent_seats.right, "absolute transform -translate-y-1/2 top-1/2 right-4"}
+                      ] do %>
+                        <.current_trick_card class={class} seat={seat} game={@game} />
                       <% end %>
                     </div>
                   <% end %>
@@ -248,108 +161,70 @@
 <!-- Info panel on the right - stacked vertically -->
       <div class="w-80 flex flex-col gap-5">
         <!-- Game header - now on the right side -->
-        <div class="bg-white/80 shadow-xl backdrop-blur-md rounded-2xl py-3 px-5 flex flex-col border border-white/20">
-          <h1 class="text-lg leading-6 font-semibold text-gray-900 mb-1">
-            {Lora.Contract.name(@current_contract)}
-          </h1>
-          <p class="text-sm text-gray-600 mb-3">
-            {Lora.Contract.description(@current_contract)}
-          </p>
-          <div class="flex flex-col gap-2">
-            <span class="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700 border border-blue-200">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-3 w-3 mr-1"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-              Dealer: {find_player_name(@game, @game.dealer_seat)}
-            </span>
-            <span class="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700 border border-green-200">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-3 w-3 mr-1"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                />
-              </svg>
-              Current Player: {find_player_name(@game, @game.current_player)}
-            </span>
+        <div class="card bg-gray-900/80 backdrop-blur-md rounded-xl shadow-2xl border border-gray-700">
+          <div class="px-4 py-2 bg-gradient-to-r from-indigo-900 to-indigo-700 rounded-t-xl">
+            <h3 class="text-sm font-medium text-white">Game</h3>
+          </div>
+          <div class="card-body p-4">
+            <h1 class="text-lg leading-6 font-semibold mb-1">
+              {Lora.Contract.name(@current_contract)}
+            </h1>
+            <p class="text-sm mb-3">
+              {Lora.Contract.description(@current_contract)}
+            </p>
+            <div class="text-gray-300">
+              <dl class="grid grid-cols-2 gap-x-2 gap-y-2">
+                <dt class="text-xs font-medium">Dealer</dt>
+                <dd class="text-xs font-semibold">
+                  {find_player_name(@game, @game.dealer_seat)}
+                </dd>
+                <dt class="text-xs font-medium">Phase</dt>
+                <dd class="text-xs font-semibold capitalize">
+                  {to_string(@game.phase)}
+                </dd>
+                <dt class="text-xs font-medium">Deal</dt>
+                <dd class="text-xs font-semibold">{@game.dealt_count} / 28</dd>
+              </dl>
+            </div>
           </div>
         </div>
         
 <!-- Scoreboard - now stacked on right -->
-        <div class="bg-white/90 rounded-xl shadow-xl overflow-hidden backdrop-blur-md border border-white/20 flex-grow">
-          <div class="px-4 py-2 bg-gradient-to-r from-indigo-700 to-indigo-600 rounded-t-xl">
+        <div class="card bg-gray-900/80 backdrop-blur-md rounded-xl shadow-2xl border border-gray-700">
+          <div class="px-4 py-2 bg-gradient-to-r from-indigo-900 to-indigo-700 rounded-t-xl">
             <h3 class="text-sm font-medium text-white">Scoreboard</h3>
           </div>
-          <div class="px-3 py-2">
-            <table class="w-full divide-y divide-gray-200">
+          <div class="card-body p-4">
+            <table class="table">
               <thead>
                 <tr>
-                  <th class="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th class="text-gray-400 p-1 uppercase tracking-wider">
                     Player
                   </th>
-                  <th class="px-2 py-1 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th class="text-gray-400 p-1 text-right uppercase tracking-wider">
                     Score
                   </th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-gray-200">
+              <tbody>
                 <%= for p <- @game.players do %>
-                  <tr class={if p.seat == @player.seat, do: "bg-amber-50/80"}>
-                    <td class="px-2 py-1.5 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <tr class={if p.seat == @player.seat, do: "bg-amber-50/10"}>
+                    <td class="px-2 py-1.5 whitespace-nowrap">
                       {p.name}
-                      {if p.seat == @player.seat, do: "👤"}
-                      {if p.seat == @game.dealer_seat, do: "🎲"}
+                      <%= if p.seat == @player.seat do %>
+                        <.icon name="hero-user-solid w-5 h-5" />
+                      <% end %>
+                      <%= if p.seat == @game.dealer_seat do %>
+                        <span class="w-5 h-5">🎲</span>
+                      <% end %>
                     </td>
-                    <td class="px-2 py-1.5 whitespace-nowrap text-sm text-right text-gray-700 font-medium">
+                    <td class="px-2 py-1.5 whitespace-nowrap text-right">
                       {Map.get(@game.scores, p.seat, 0)}
                     </td>
                   </tr>
                 <% end %>
               </tbody>
             </table>
-          </div>
-        </div>
-        
-<!-- Game Info - now stacked on right -->
-        <div class="bg-white/90 rounded-xl shadow-xl backdrop-blur-md border border-white/20">
-          <div class="px-4 py-2 bg-gradient-to-r from-emerald-700 to-emerald-600 rounded-t-xl">
-            <h3 class="text-sm font-medium text-white">Game Info</h3>
-          </div>
-          <div class="p-3">
-            <dl class="grid grid-cols-2 gap-x-2 gap-y-2">
-              <dt class="text-xs font-medium text-gray-500">Contract</dt>
-              <dd class="text-xs font-semibold text-gray-700">
-                {Contract.name(@current_contract)}
-              </dd>
-              <dt class="text-xs font-medium text-gray-500">Dealer</dt>
-              <dd class="text-xs font-semibold text-gray-700">
-                {find_player_name(@game, @game.dealer_seat)}
-              </dd>
-              <dt class="text-xs font-medium text-gray-500">Phase</dt>
-              <dd class="text-xs font-semibold text-gray-700 capitalize">
-                {to_string(@game.phase)}
-              </dd>
-              <dt class="text-xs font-medium text-gray-500">Deal</dt>
-              <dd class="text-xs font-semibold text-gray-700">{@game.dealt_count} / 28</dd>
-            </dl>
           </div>
         </div>
       </div>
@@ -393,8 +268,8 @@
 
     /* Card throwing animations */
     @keyframes throw-from-bottom {
-      0% { 
-        transform: translateY(120px) translateX(20px) rotate(8deg); 
+      0% {
+        transform: translateY(120px) translateX(20px) rotate(8deg);
         opacity: 0;
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
       }
@@ -403,16 +278,16 @@
         opacity: 0.8;
         box-shadow: 0 15px 25px rgba(0, 0, 0, 0.3);
       }
-      100% { 
-        transform: translateY(0) translateX(0) rotate(0deg); 
+      100% {
+        transform: translateY(0) translateX(0) rotate(0deg);
         opacity: 1;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
       }
     }
 
     @keyframes throw-from-top {
-      0% { 
-        transform: translateY(-120px) translateX(-15px) rotate(-10deg); 
+      0% {
+        transform: translateY(-120px) translateX(-15px) rotate(-10deg);
         opacity: 0;
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
       }
@@ -421,7 +296,7 @@
         opacity: 0.8;
         box-shadow: 0 15px 25px rgba(0, 0, 0, 0.3);
       }
-      100% { 
+      100% {
         transform: translateY(0) translateX(0) rotate(0deg);
         opacity: 1;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
@@ -429,8 +304,8 @@
     }
 
     @keyframes throw-from-left {
-      0% { 
-        transform: translateY(15px) translateX(-120px) rotate(-20deg); 
+      0% {
+        transform: translateY(15px) translateX(-120px) rotate(-20deg);
         opacity: 0;
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
       }
@@ -439,7 +314,7 @@
         opacity: 0.8;
         box-shadow: 0 15px 25px rgba(0, 0, 0, 0.3);
       }
-      100% { 
+      100% {
         transform: translateY(0) translateX(0) rotate(0deg);
         opacity: 1;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
@@ -447,8 +322,8 @@
     }
 
     @keyframes throw-from-right {
-      0% { 
-        transform: translateY(-10px) translateX(120px) rotate(20deg); 
+      0% {
+        transform: translateY(-10px) translateX(120px) rotate(20deg);
         opacity: 0;
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
       }
@@ -457,7 +332,7 @@
         opacity: 0.8;
         box-shadow: 0 15px 25px rgba(0, 0, 0, 0.3);
       }
-      100% { 
+      100% {
         transform: translateY(0) translateX(0) rotate(0deg);
         opacity: 1;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
@@ -505,15 +380,15 @@
 
     /* Trick winner animation */
     @keyframes winner-glow {
-      0% { 
+      0% {
         box-shadow: 0 0 5px #facc15, 0 0 10px #facc15, 0 0 15px #facc15;
         transform: scale(1);
       }
-      50% { 
-        box-shadow: 0 0 10px #facc15, 0 0 20px #facc15, 0 0 30px #facc15; 
+      50% {
+        box-shadow: 0 0 10px #facc15, 0 0 20px #facc15, 0 0 30px #facc15;
         transform: scale(1.05);
       }
-      100% { 
+      100% {
         box-shadow: 0 0 5px #facc15, 0 0 10px #facc15, 0 0 15px #facc15;
         transform: scale(1);
       }

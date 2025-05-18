@@ -10,7 +10,7 @@ defmodule LoraWeb.GameLive do
   import LoraWeb.CurrentPlayerComponents
   import LoraWeb.CardUtils
   import LoraWeb.GameUtils
-  import LoraWeb.DeckCompoents
+  import LoraWeb.CurrentTrickComponent
 
   @impl true
   def mount(%{"id" => game_id}, _session, socket) do

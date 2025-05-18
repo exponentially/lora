@@ -7,6 +7,6 @@ defmodule LoraWeb.Presence do
   Returns a topic string for tracking game-specific presence.
   """
   def game_topic(game_id) when is_binary(game_id) do
-    "presence:game:#{game_id}"
+    "presence::game::#{game_id}"
   end
 end
