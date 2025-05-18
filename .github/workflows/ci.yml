@@ -5,6 +5,12 @@ on:
     branches: [main, master, develop]
   pull_request:
     branches: [main, master, develop]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to deploy to"
+        required: true
+        default: "production"
 
 env:
   REGISTRY: ghcr.io
@@ -129,4 +135,89 @@ jobs:
         with:
           name: build-info
           path: build-info.txt
-          retention-days: 1
+          retention-days: 7
+
+  comment-pr:
+    name: Comment Pull Request
+    needs: [dockerize]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      pull-requests: write
+      packages: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Comment PR
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} --body "🚀 Docker image built successfully with tag: \`${{ needs.setup-version.outputs.docker_version }}\`
+
+          To test this image locally:
+          \`\`\`bash
+          docker pull ${{ env.REGISTRY }}/${{ github.repository }}:${{ needs.setup-version.outputs.docker_version }}
+          docker run --rm -p 4000:4000 -e SECRET_KEY_BASE=\$(openssl rand -base64 48) ${{ env.REGISTRY }}/${{ github.repository }}:${{ needs.setup-version.outputs.docker_version }}
+          \`\`\`"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy:
+    name: Deploy to Production
+    needs: [dockerize]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    environment:
+      name: ${{ github.event.inputs.environment || 'production' }}
+      url: ${{ vars.DEPLOYMENT_URL }}
+    # Manual approval required for deployment
+    concurrency:
+      group: ${{ github.event.inputs.environment || 'production' }}_environment
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - name: Download build info
+        uses: actions/download-artifact@v4
+        with:
+          name: build-info
+
+      - name: Set image tag
+        id: build-info
+        run: |
+          IMAGE_TAG=$(cat build-info.txt)
+          echo "Using image tag: $IMAGE_TAG"
+          echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          echo "${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Deploy via SSH
+        env:
+          IMAGE_TAG: ${{ steps.build-info.outputs.image_tag }}
+          DEPLOY_SERVER: ${{ secrets.DEPLOY_SERVER }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          # SSH to the server and update the docker-compose.yml file with the new image tag
+          ssh $DEPLOY_USER@$DEPLOY_SERVER "cd $DEPLOY_PATH && \
+            export IMAGE_TAG=$IMAGE_TAG && \
+            sed -i 's|image:.*lora:.*|image: $IMAGE_TAG|' docker-compose.yml && \
+            docker compose pull && \
+            docker compose up -d"
+
+      - name: Verify deployment
+        env:
+          DEPLOY_SERVER: ${{ secrets.DEPLOY_SERVER }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          ssh $DEPLOY_USER@$DEPLOY_SERVER "cd $DEPLOY_PATH && \
+            docker compose ps && \
+            echo 'Deployment completed successfully!'"
