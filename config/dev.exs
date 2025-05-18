@@ -1,5 +1,8 @@
 import Config
 
+# Set debug mode for development
+config :lora_web, :debug_mode, true
+
 # For development, we disable any cache and enable
 # debugging and code reloading.
 #

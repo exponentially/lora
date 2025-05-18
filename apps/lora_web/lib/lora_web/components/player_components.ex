@@ -1,7 +1,21 @@
 defmodule LoraWeb.PlayerComponents do
   use Phoenix.Component
   import LoraWeb.GameUtils
+  import LoraWeb.DeckCompoents
+  import LoraWeb.CoreComponents
 
+  @type card_stack_assigns :: %{
+          player_seat: non_neg_integer(),
+          game: map(),
+          size: :small | :medium | :large
+        }
+
+  @doc """
+  Renders a player's info plate in a card game UI. Shows player name, online status,
+  score, and indicates if they're the current player. Adapts to different sizes.
+
+  The plate is only displayed for opponents; the current user's info is shown elsewhere.
+  """
   attr :player, :map, required: true
   attr :game, :map, required: true
   attr :presences, :map, required: true
@@ -26,6 +40,7 @@ defmodule LoraWeb.PlayerComponents do
 
     assigns =
       assigns
+      |> assign(:is_dealer, assigns.game && assigns.game.dealer_seat == assigns.player_seat)
       |> assign(:player_name, find_player_name(assigns.game, assigns.player_seat))
       # Use seated_player to avoid conflicts with assigns.player
       |> assign(:seated_player, player)
@@ -40,121 +55,130 @@ defmodule LoraWeb.PlayerComponents do
         assigns,
         :outer_class,
         case assigns.size do
-          "small" ->
-            "bg-white/90 rounded-lg px-4 py-3 mb-4 shadow-xl backdrop-blur-md border border-white/30 w-full"
-
-          "medium" ->
-            "bg-white/90 rounded-lg px-5 py-3 mb-4 shadow-xl backdrop-blur-md border border-white/30 w-80"
-
-          "large" ->
-            "bg-white/90 rounded-lg px-5 py-4 mb-4 shadow-xl backdrop-blur-md border border-white/30 w-full"
+          "small" -> "px-4 py-2 w-full"
+          "medium" -> "px-5 py-2 w-80"
+          "large" -> "px-5 py-3 w-full"
         end
       )
 
     assigns =
-      assign(
-        assigns,
-        :name_class,
-        case assigns.size do
-          "small" -> "text-base font-bold text-gray-800"
-          "medium" -> "text-lg font-bold text-gray-800"
-          "large" -> "text-xl font-bold text-gray-800"
-        end
-      )
+      case assigns.size do
+        "small" ->
+          assign(
+            assigns,
+            name_class: "text-base",
+            score_box_class: "px-2 py-1.5",
+            score_text_class: "text-base",
+            status_size: "w-2.5 h-2.5"
+          )
 
-    assigns =
-      assign(
-        assigns,
-        :score_box_class,
-        case assigns.size do
-          "small" -> "bg-indigo-100 px-2 py-1.5 rounded-lg border border-indigo-200"
-          "medium" -> "bg-indigo-100 px-3 py-2 rounded-lg border border-indigo-200"
-          "large" -> "bg-indigo-100 px-4 py-2.5 rounded-lg border border-indigo-200"
-        end
-      )
+        "medium" ->
+          assign(
+            assigns,
+            name_class: "text-lg",
+            score_box_class: "px-3 py-2",
+            score_text_class: "text-xl",
+            status_size: "w-3 h-3"
+          )
 
-    assigns =
-      assign(
-        assigns,
-        :score_text_class,
-        case assigns.size do
-          "small" -> "text-base font-bold text-indigo-700"
-          "medium" -> "text-xl font-bold text-indigo-700"
-          "large" -> "text-2xl font-bold text-indigo-700"
-        end
-      )
-
-    assigns =
-      assign(
-        assigns,
-        :status_size,
-        case assigns.size do
-          "small" -> "w-2.5 h-2.5"
-          "medium" -> "w-3 h-3"
-          "large" -> "w-3.5 h-3.5"
-        end
-      )
+        "large" ->
+          assign(
+            assigns,
+            name_class: "text-xl",
+            score_box_class: "px-4 py-2.5",
+            score_text_class: "text-2xl",
+            status_size: "w-3.5 h-3.5"
+          )
+      end
 
     ~H"""
-    <div class={@outer_class}>
-      <div class="flex items-center justify-between">
-        <div>
-          <span class={@name_class <> " flex items-center gap-2"}>
-            {@player_name}
-            <%= if @is_online do %>
-              <span class={"inline-block #{@status_size} bg-green-500 rounded-full"} title="Online">
-              </span>
-            <% else %>
-              <span class={"inline-block #{@status_size} bg-red-500 rounded-full"} title="Offline">
-              </span>
-            <% end %>
-          </span>
-          <%= if @current_player do %>
-            <span class="inline-flex items-center gap-1 mt-1 text-sm font-medium text-green-600">
-              <svg
-                class="h-4 w-4"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-              Current turn
-            </span>
-          <% end %>
+    <div class={"stats shadow-2xl border-2 border-gray-700 " <> if @current_player, do: "current-player", else: "" }>
+      <div :if={@is_dealer} class="stat ">
+        <div class="stat-title">Dealer</div>
+        <%!-- <div class="stat-value">🎲</div> --%>
+        <div class="stat-value">
+          <.icon name="hero-square-3-stack-3d-solid" class=" size-[40px1]" />
         </div>
-        <div class={@score_box_class}>
-          <span class={@score_text_class}>{@score}</span>
+        <div class="stat-desc text-secondary line-clamp-1"></div>
+      </div>
+      <div class="stat w-[250px]">
+        <div class="stat-figure text-secondary">
+          <div class="avatar indicator">
+            <span class="indicator-item top-[15px] right-[15px]">
+              <%= if @is_online do %>
+                <span class="badge bg-green-500 size-5"></span>
+              <% else %>
+                <span class="loading loading-bars loading-xs text-red-500"></span>
+              <% end %>
+            </span>
+            <div class="size-20 m-[-5px] rounded-full text-gray-300">
+              <.icon name="hero-user-circle size-20 p-0" />
+              <%= if @current_player do %>
+                <span class="current-user-wave-1"></span>
+                <span class="current-user-wave-2"></span>
+                <span class="current-user-wave-3"></span>
+              <% end %>
+            </div>
+          </div>
+        </div>
+        <div class="stat-title">Score</div>
+        <div class="stat-value">{@score}</div>
+        <div class="stat-desc text-secondary line-clamp-1" title={@player_name}>
+          {@player_name}
         </div>
       </div>
     </div>
     """
   end
 
+  attr :is_online, :boolean, required: true
+
+  def online_status(assigns) do
+    ~H"""
+    <%= if @is_online do %>
+      <span class="loading loading-bars loading-sm bg-red-500"></span>
+    <% else %>
+      <span class="loading loading-bars loading-sm bg-red-500"></span>
+    <% end %>
+    """
+  end
+
+  @doc """
+  Renders a card stack for a player in a card game UI.
+
+  ## Attributes
+
+  * `player_seat` - The seat number of the player whose cards should be displayed
+  * `game` - The game state containing hands, phases, and other game information
+  * `size` - The size of the card stack: "small", "medium", or "large" (default: "medium")
+
+  ## Examples
+
+      <.card_stack player_seat={1} game={@game} size="medium" />
+  """
   attr :player_seat, :integer, required: true
   attr :game, :map, required: true
   # "small", "medium", or "large"
   attr :size, :string, default: "medium"
-
+  @spec card_stack(card_stack_assigns()) :: Phoenix.LiveView.Rendered.t()
   def card_stack(assigns) do
     assigns =
       assigns
-      |> assign(:hand_size, length(Map.get(assigns.game.hands, assigns.player_seat, [])))
+      |> assign(:hand, Map.get(assigns.game.hands, assigns.player_seat, []))
       |> assign_stack_styles()
+      |> assign(:debug, Application.get_env(:lora_web, :debug_mode, false))
 
     ~H"""
     <%= if assigns.game.phase == :playing do %>
-      <div class={"relative #{@width} #{@height}"}>
-        <div class={"absolute top-0 left-0 #{@card_height} #{@card_width} bg-gradient-to-br from-blue-800 to-blue-900 rounded-lg shadow-xl border border-blue-700 transform -rotate-6"}>
-        </div>
-        <div class={"absolute top-0 #{@spacing} #{@card_height} #{@card_width} bg-gradient-to-br from-blue-800 to-blue-900 rounded-lg shadow-xl border border-blue-700 transform -rotate-3"}>
-        </div>
-        <div class={"absolute top-0 #{@spacing} #{@spacing} #{@card_height} #{@card_width} bg-gradient-to-br from-blue-800 to-blue-900 rounded-lg shadow-xl border border-blue-700 flex items-center justify-center"}>
-          <span class={"#{@text_size} font-bold text-white select-none"}>{@hand_size}</span>
+      <div class={"relative #{@width} overflow-visible"}>
+        <div class={"card-fan size-#{@size} flex justify-center"} style="min-height: #{@fanHeight}px;">
+          <%= for {{suit, rank}, index} <- Enum.with_index(@hand) do %>
+            <%= if @debug do %>
+              <.card_front suit={suit} rank={rank} class={"z-#{index}"} />
+            <% else %>
+              <.card_back class={"z-#{index}"} />
+            <% end %>
+          <% end %>
         </div>
       </div>
     <% end %>
@@ -165,30 +189,18 @@ defmodule LoraWeb.PlayerComponents do
     case assigns.size do
       "small" ->
         assigns
-        |> assign(:width, "w-24")
-        |> assign(:height, "h-24")
-        |> assign(:card_width, "w-16")
-        |> assign(:card_height, "h-24")
-        |> assign(:text_size, "text-lg")
-        |> assign(:spacing, "left-3")
-
-      "medium" ->
-        assigns
-        |> assign(:width, "w-32")
-        |> assign(:height, "h-28")
-        |> assign(:card_width, "w-20")
-        |> assign(:card_height, "h-28")
-        |> assign(:text_size, "text-2xl")
-        |> assign(:spacing, "left-6")
+        |> assign(:width, "w-full")
+        |> assign(:fanHeight, 180)
 
       "large" ->
         assigns
-        |> assign(:width, "w-36")
-        |> assign(:height, "h-32")
-        |> assign(:card_width, "w-24")
-        |> assign(:card_height, "h-32")
-        |> assign(:text_size, "text-3xl")
-        |> assign(:spacing, "left-8")
+        |> assign(:width, "w-full")
+        |> assign(:fanHeight, 260)
+
+      _medium ->
+        assigns
+        |> assign(:width, "w-full")
+        |> assign(:fanHeight, 220)
     end
   end
 end

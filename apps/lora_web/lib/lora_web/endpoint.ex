@@ -3,11 +3,13 @@ defmodule LoraWeb.Endpoint do
 
   # The session will be stored in the cookie and signed,
   # this means its contents can be read but not tampered with.
-  # Set :encryption_salt if you would also like to encrypt it.
+  # We also encrypt it for enhanced security.
   @session_options [
     store: :cookie,
     key: "_lora_web_key",
     signing_salt: "5rsudttO",
+    encryption_salt: "YamqSfwz",
+    encrypt: true,
     same_site: "Lax"
   ]
 

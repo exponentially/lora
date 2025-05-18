@@ -81,4 +81,88 @@ defmodule Lora do
   def generate_player_id do
     :crypto.strong_rand_bytes(16) |> Base.encode16(case: :lower)
   end
+
+  @doc """
+  Lists all open games that are waiting for players to join.
+
+  Returns a list of game structs with basic information.
+  """
+  def list_open_games do
+    # Get all active game IDs from supervisor
+    game_ids = GameSupervisor.list_games()
+
+    # Fetch the state of each game and filter for those that are still accepting players
+    game_ids
+    |> Enum.map(fn id ->
+      case get_game_state(id) do
+        {:ok, game} -> {id, game}
+        _ -> nil
+      end
+    end)
+    |> Enum.filter(&(&1 != nil))
+    |> Enum.filter(fn {_id, game} ->
+      # Games are "open" if they are in lobby phase
+      # and have fewer than 4 players
+      game.phase == :lobby and length(game.players) < 4
+    end)
+    |> Enum.map(fn {id, game} ->
+      first_player = List.first(game.players)
+      creator_name = if first_player, do: first_player.name, else: "Unknown"
+
+      %{
+        id: id,
+        players: Enum.map(game.players, & &1.name),
+        player_count: length(game.players),
+        created_at: Map.get(game, :created_at, DateTime.utc_now()),
+        creator: creator_name
+      }
+    end)
+  end
+
+  @doc """
+  Lists all games that a player is actively participating in.
+
+  Returns a list of game structs with basic information.
+  """
+  def list_player_active_games(player_id) do
+    # Get all active game IDs from supervisor
+    game_ids = GameSupervisor.list_games()
+
+    # Fetch the state of each game and filter for those containing the player
+    game_ids
+    |> Enum.map(fn id ->
+      case get_game_state(id) do
+        {:ok, game} -> {id, game}
+        _ -> nil
+      end
+    end)
+    |> Enum.filter(&(&1 != nil))
+    |> Enum.filter(fn {_id, game} ->
+      # Check if player is in this game
+      Enum.any?(game.players, fn p -> p.id == player_id end)
+    end)
+    |> Enum.map(fn {id, game} ->
+      player = Enum.find(game.players, fn p -> p.id == player_id end)
+
+      opponent_names =
+        game.players
+        |> Enum.reject(fn p -> p.id == player_id end)
+        |> Enum.map(& &1.name)
+
+      %{
+        id: id,
+        players: Enum.map(game.players, & &1.name),
+        player_count: length(game.players),
+        playing: game.phase != :lobby,
+        last_activity:
+          Map.get(game, :last_activity, Map.get(game, :created_at, DateTime.utc_now())),
+        your_turn:
+          Map.get(game, :current_player_idx, nil) ==
+            Enum.find_index(game.players, fn p -> p.id == player_id end),
+        your_cards: Map.get(player, :hand, []),
+        opponents: opponent_names,
+        created_at: Map.get(game, :created_at, DateTime.utc_now())
+      }
+    end)
+  end
 end

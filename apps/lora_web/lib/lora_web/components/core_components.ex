@@ -243,8 +243,7 @@ defmodule LoraWeb.CoreComponents do
     <button
       type={@type}
       class={[
-        "phx-submit-loading:opacity-75 rounded-lg bg-zinc-900 hover:bg-zinc-700 py-2 px-3",
-        "text-sm font-semibold leading-6 text-white active:text-white/80",
+        "btn btn-primary",
         @class
       ]}
       {@rest}
@@ -288,7 +287,7 @@ defmodule LoraWeb.CoreComponents do
   attr :type, :string,
     default: "text",
     values: ~w(checkbox color date datetime-local email file month number password
-               range search select tel text textarea time url week)
+               range search select tel text textarea time url week hidden)
 
   attr :field, Phoenix.HTML.FormField,
     doc: "a form field struct retrieved from the form, for example: @form[:email]"
@@ -322,7 +321,7 @@ defmodule LoraWeb.CoreComponents do
 
     ~H"""
     <div>
-      <label class="flex items-center gap-4 text-sm leading-6 text-zinc-600">
+      <label class="label cursor-pointer flex justify-start gap-4">
         <input type="hidden" name={@name} value="false" disabled={@rest[:disabled]} />
         <input
           type="checkbox"
@@ -330,10 +329,10 @@ defmodule LoraWeb.CoreComponents do
           name={@name}
           value="true"
           checked={@checked}
-          class="rounded border-zinc-300 text-zinc-900 focus:ring-0"
+          class="checkbox checkbox-primary"
           {@rest}
         />
-        {@label}
+        <span class="label-text">{@label}</span>
       </label>
       <.error :for={msg <- @errors}>{msg}</.error>
     </div>
@@ -344,13 +343,7 @@ defmodule LoraWeb.CoreComponents do
     ~H"""
     <div>
       <.label for={@id}>{@label}</.label>
-      <select
-        id={@id}
-        name={@name}
-        class="mt-2 block w-full rounded-md border border-gray-300 bg-white shadow-sm focus:border-zinc-400 focus:ring-0 sm:text-sm"
-        multiple={@multiple}
-        {@rest}
-      >
+      <select id={@id} name={@name} class="select select-bordered w-full" multiple={@multiple} {@rest}>
         <option :if={@prompt} value="">{@prompt}</option>
         {Phoenix.HTML.Form.options_for_select(@options, @value)}
       </select>
@@ -367,9 +360,8 @@ defmodule LoraWeb.CoreComponents do
         id={@id}
         name={@name}
         class={[
-          "mt-2 block w-full rounded-lg text-zinc-900 focus:ring-0 sm:text-sm sm:leading-6 min-h-[6rem]",
-          @errors == [] && "border-zinc-300 focus:border-zinc-400",
-          @errors != [] && "border-rose-400 focus:border-rose-400"
+          "textarea textarea-bordered w-full min-h-[6rem]",
+          @errors != [] && "textarea-error"
         ]}
         {@rest}
       >{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
@@ -389,9 +381,8 @@ defmodule LoraWeb.CoreComponents do
         id={@id}
         value={Phoenix.HTML.Form.normalize_value(@type, @value)}
         class={[
-          "mt-2 block w-full rounded-lg text-zinc-900 focus:ring-0 sm:text-sm sm:leading-6",
-          @errors == [] && "border-zinc-300 focus:border-zinc-400",
-          @errors != [] && "border-rose-400 focus:border-rose-400"
+          "input input-bordered w-full",
+          @errors != [] && "input-error"
         ]}
         {@rest}
       />
@@ -408,8 +399,8 @@ defmodule LoraWeb.CoreComponents do
 
   def label(assigns) do
     ~H"""
-    <label for={@for} class="block text-sm font-semibold leading-6 text-zinc-800">
-      {render_slot(@inner_block)}
+    <label for={@for} class="label">
+      <span class="label-text font-medium">{render_slot(@inner_block)}</span>
     </label>
     """
   end
@@ -421,10 +412,12 @@ defmodule LoraWeb.CoreComponents do
 
   def error(assigns) do
     ~H"""
-    <p class="mt-3 flex gap-3 text-sm leading-6 text-rose-600">
-      <.icon name="hero-exclamation-circle-mini" class="mt-0.5 h-5 w-5 flex-none" />
-      {render_slot(@inner_block)}
-    </p>
+    <div class="label">
+      <span class="label-text-alt text-error flex items-center gap-1">
+        <.icon name="hero-exclamation-circle-mini" class="h-4 w-4 flex-none" />
+        {render_slot(@inner_block)}
+      </span>
+    </div>
     """
   end
 
@@ -608,24 +601,6 @@ defmodule LoraWeb.CoreComponents do
     <span class={[@name, @class]} />
     """
   end
-
-  # @doc """
-  # Game player information, renders score, name and presence. Also containes the flag if it is player turn.
-  # """
-  # attr :name, :string, required: true
-  # attr :score, :integer, default: 0
-  # attr :is_turn, :boolean, default: false
-  # attr :is_online, :boolean, default: false
-  # def player_plate(%{is_turn: is_turn} = assigns) do
-  #   assigns = assign(assigns, turn_class: if(not is_turn, do: "text-white", else: "text-yellow-400"))
-  #   ~H"""
-  #   <div class={"flex justify-between gap-2 p-2 " <> @turn_class}>
-  #     <span class="text-sm font-semibold leading-6 badge">{@score}</span>
-  #     <span class={"text-sm font-semibold leading-6 " <> @turn_class}>{@name}</span>
-  #     <span :if={@is_turn} class="loading loading-bars loading-md text-yellow-300"></span>
-  #   </div>
-  #   """
-  # end
 
   ## JS Commands
 

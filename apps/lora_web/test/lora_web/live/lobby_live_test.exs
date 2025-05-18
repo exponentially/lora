@@ -3,48 +3,39 @@ defmodule LoraWeb.LobbyLiveTest do
 
   test "renders lobby form", %{conn: conn} do
     {:ok, _view, html} = live(conn, "/")
-    assert html =~ "Create Game"
-    assert html =~ "Join Game"
+    assert html =~ "Create a New Game"
+    assert html =~ "Join an Existing Game"
   end
 
   test "create game - shows error with empty player name", %{conn: conn} do
-    {:ok, view, _html} = live(conn, "/")
+    # When not signed in, there should be a warning about signing in
+    {:ok, _view, html} = live(conn, "/")
 
-    # Submit form with empty player name
-    html =
-      view
-      |> element("#create-game-form")
-      |> render_submit(%{create_player: %{name: ""}})
-
-    # Verify error message is shown
-    assert html =~ "Please enter a valid name"
+    # Verify message is shown
+    assert html =~ "Please sign in to create a game"
   end
 
-  test "join game - shows error with empty player name", %{conn: conn} do
-    game_id = "TESTID"
-
+  test "join game - shows error with empty game code", %{conn: conn} do
     {:ok, view, _html} = live(conn, "/")
 
-    # Submit form with empty player name
+    # Submit form with empty game code
     html =
       view
       |> element("#join-game-form")
-      |> render_submit(%{join_player: %{name: "", game_code: game_id}})
+      |> render_submit(%{join_player: %{game_code: ""}})
 
-    # Verify error message is shown
-    assert html =~ "Please enter a valid name"
+    # Should show an error
+    assert html =~ "Please enter a valid game code"
   end
 
-  test "join game - shows error with empty game ID", %{conn: conn} do
-    player_name = "TestPlayer"
-
+  test "join game - shows error with invalid game code", %{conn: conn} do
     {:ok, view, _html} = live(conn, "/")
 
-    # Submit form with empty game ID
+    # Submit form with invalid game code
     html =
       view
       |> element("#join-game-form")
-      |> render_submit(%{join_player: %{name: player_name, game_code: ""}})
+      |> render_submit(%{join_player: %{game_code: "ABC"}})
 
     # Verify error message is shown
     assert html =~ "Please enter a valid game code"

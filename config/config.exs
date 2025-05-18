@@ -32,6 +32,22 @@ config :lora_web, LoraWeb.Endpoint,
   pubsub_server: Lora.PubSub,
   live_view: [signing_salt: "ss8bVTun"]
 
+# Configure Ueberauth
+config :ueberauth, Ueberauth,
+  providers: [
+    auth0: {Ueberauth.Strategy.Auth0, []}
+  ]
+
+# Configure Ueberauth Auth0 provider
+config :ueberauth, Ueberauth.Strategy.Auth0.OAuth,
+  domain: System.get_env("AUTH0_DOMAIN", "tri-mudraca-dev.eu.auth0.com"),
+  client_id: System.get_env("AUTH0_CLIENT_ID", "ty88vQoOuTjekRCQPalFDsnK0eL0gyog"),
+  client_secret:
+    System.get_env(
+      "AUTH0_CLIENT_SECRET",
+      "8_I9bfVRxjbFekL8ZQkXGq6w23TdcT0juSBedoPeVtJaYYheO6wwy8pZ1L1sURfR"
+    )
+
 # Configure esbuild (the version is required)
 config :esbuild,
   version: "0.17.11",

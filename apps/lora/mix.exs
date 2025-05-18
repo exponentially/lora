@@ -25,7 +25,7 @@ defmodule Lora.MixProject do
   def application do
     [
       mod: {Lora.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :ueberauth]
     ]
   end
 
@@ -42,7 +42,9 @@ defmodule Lora.MixProject do
       {:phoenix_pubsub, "~> 2.1"},
       {:jason, "~> 1.2"},
       {:swoosh, "~> 1.5"},
-      {:finch, "~> 0.13"}
+      {:finch, "~> 0.13"},
+      {:ueberauth, "~> 0.10.8"},
+      {:ueberauth_auth0, "~> 2.0"}
     ]
   end
 

@@ -18,6 +18,10 @@ defmodule Lora.Application do
       {Phoenix.PubSub, name: Lora.PubSub}
     ]
 
+    # Initialize the Accounts ETS table
+    :ok = Lora.Accounts.init()
+    IO.puts("Accounts ETS table initialized successfully")
+
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Lora.Supervisor]

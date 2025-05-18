@@ -13,17 +13,16 @@ defmodule LoraWeb.CurrentPlayerComponents do
     ~H"""
     <div class={
       if assigns.game.current_player == assigns.player.seat,
-        do:
-          "bg-gradient-to-r from-amber-100/90 to-amber-50/90 backdrop-blur-md rounded-xl p-5 shadow-2xl border border-amber-200/50",
-        else: "bg-white/90 backdrop-blur-md rounded-xl p-5 shadow-2xl border border-white/30"
+        do: "bg-gray-900/80 backdrop-blur-md rounded-xl p-5 shadow-2xl border border-gray-700",
+        else: "bg-gray-900/80 backdrop-blur-md rounded-xl p-5 shadow-2xl border border-gray-700"
     }>
       <!-- Player info -->
       <div class="flex justify-between items-center mb-5">
         <div class="flex items-center gap-3">
           <div>
-            <span class="font-bold text-xl text-gray-800">{@player.name}</span>
+            <span class="font-bold text-xl text-white">{@player.name}</span>
             <div class="flex items-center gap-2 mt-1">
-              <span class="text-sm text-gray-600">(Seat {String.trim("#{@player.seat}")})</span>
+              <span class="text-sm text-gray-300">(Seat {String.trim("#{@player.seat}")})</span>
               <%= if @game.dealer_seat == @player.seat do %>
                 <span class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700 border border-blue-200">
                   <svg
@@ -66,8 +65,8 @@ defmodule LoraWeb.CurrentPlayerComponents do
             </span>
           <% end %>
 
-          <div class="bg-indigo-100 px-3 py-2 rounded-lg border border-indigo-200">
-            <span class="text-xl font-bold text-indigo-700">
+          <div class="bg-gray-800 px-3 py-2 rounded-lg border border-gray-700">
+            <span class="text-xl font-bold text-white">
               {Map.get(@game.scores, @player.seat, 0)}
             </span>
           </div>

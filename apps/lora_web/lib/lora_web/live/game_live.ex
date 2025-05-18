@@ -1,4 +1,3 @@
-# filepath: /home/mjaric/prj/tmp/lora/apps/lora_web/lib/lora_web/live/game_live.ex
 defmodule LoraWeb.GameLive do
   use LoraWeb, :live_view
   require Logger
@@ -8,18 +7,21 @@ defmodule LoraWeb.GameLive do
   alias LoraWeb.Presence
   import LoraWeb.PlayerComponents
   import LoraWeb.CurrentPlayerComponents
-  import LoraWeb.CardUtils
   import LoraWeb.GameUtils
+  import LoraWeb.CurrentTrickComponent
 
   @impl true
-  def mount(%{"id" => game_id}, session, socket) do
-    player_id = Map.fetch!(session, "player_id")
-    player_name = session["player_name"] || player_id
+  def mount(%{"id" => game_id}, _session, socket) do
+    # Get player info from the current_player assign (set by RequireAuth plug)
+    current_player = socket.assigns[:current_player]
 
-    if is_nil(player_id) do
-      Logger.error("Missing player information in session or socket assigns")
+    if is_nil(current_player) do
+      Logger.error("Missing player information in socket assigns")
       {:ok, redirect_to_lobby(socket, "Missing player information")}
     else
+      player_id = current_player.sub
+      player_name = current_player.name
+
       if connected?(socket) do
         # Subscribe to game updates
         PubSub.subscribe(Lora.PubSub, "game:#{game_id}")
@@ -44,6 +46,8 @@ defmodule LoraWeb.GameLive do
             # For reconnection, inform the server of the new pid
             if Enum.any?(game.players, fn p -> p.id == player_id end) do
               Lora.player_reconnect(game_id, player_id, self())
+              socket = assign_game_state(socket, game, player_id)
+              {:ok, socket}
             else
               # For new joins, add the player to the game
               case Lora.add_player(game_id, player_id, player_name) do
@@ -56,8 +60,12 @@ defmodule LoraWeb.GameLive do
               end
             end
 
-            socket = assign_game_state(socket, game, player_id)
-            {:ok, socket}
+          # Handle the error case when the game doesn't exist
+          {:error, reason} ->
+            Logger.info("Game #{game_id} not found: #{inspect(reason)}")
+
+            {:ok,
+             redirect_to_lobby(socket, "Game not found. It may have expired or been removed.")}
 
           _ ->
             {:ok, redirect_to_lobby(socket, "Game not found")}
@@ -197,7 +205,6 @@ defmodule LoraWeb.GameLive do
         player_id = socket.assigns.player_id
         # Untrack from presence and tell the game server
         Presence.untrack(self(), Presence.game_topic(game_id), player_id)
-        Lora.player_disconnect(game_id, player_id)
 
       true ->
         :ok

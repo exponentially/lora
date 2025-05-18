@@ -2,27 +2,37 @@ name: Lora CI
 
 on:
   push:
-    branches: [ main, master, develop ]
+    branches: [main, master, develop]
   pull_request:
-    branches: [ main, master, develop ]
+    branches: [main, master, develop]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to deploy to"
+        required: true
+        default: "production"
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   test:
     name: Build and Test
     runs-on: ubuntu-latest
-    
+
     env:
       MIX_ENV: test
-      
+
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Set up Elixir
         uses: erlef/setup-beam@v1
         with:
           elixir-version: "1.18.2" # [Required] Define the Elixir version
           otp-version: "27.2.1" # [Required] Define the Erlang/OTP version
-      
+
       - name: Restore dependencies cache
         uses: actions/cache@v4
         with:
@@ -36,20 +46,19 @@ jobs:
           mix local.rebar --force
           mix local.hex --force
           mix deps.get
-        
+
       - name: Run formatter check
         run: mix format --check-formatted
-        
+
       - name: Compile (with warnings as errors)
         run: mix compile --warnings-as-errors
-        
-    #   - name: Run Dialyzer
-    #     run: mix dialyzer
-        
+
+      #   - name: Run Dialyzer
+      #     run: mix dialyzer
+
       - name: Run tests with coverage
         run: mix test.with_coverage
 
-        
       - name: Archive code coverage results
         uses: actions/upload-artifact@v4
         with:
@@ -57,4 +66,158 @@ jobs:
           path: |
             cover/
           retention-days: 21
-          
+
+  dockerize:
+    name: Build and Publish Docker image
+    needs: [test]
+    runs-on: ubuntu-latest
+    # if: github.event.pull_request.merged == true
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image_tag: ${{ steps.save-image-tag.outputs.image_tag }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate version
+        id: version
+        run: |
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-8)
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          echo "docker_version=${TIMESTAMP}-${SHORT_SHA}" >> $GITHUB_OUTPUT
+
+      # Only login to registry if we're on main branch
+      - name: Log in to GitHub Container Registry
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          # Only push if we're on main branch
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.docker_version }}
+            ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && format('{0}/{1}:latest', env.REGISTRY, env.IMAGE_NAME) || '' }}
+          labels: |
+            org.opencontainers.image.version=${{ steps.version.outputs.docker_version }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+          build-args: |
+            GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+            GITHUB_ACTOR=${{ github.actor }}
+            GITHUB_REPOSITORY_OWNER=${{ github.repository_owner }}
+            PROJECTS_URL=${{ vars.PROJECTS_URL }}
+            ACCOUNTS_URL=${{ vars.ACCOUNTS_URL }}
+      # Save image tag for deployment workflow
+      - name: Save build info
+        id: save-image-tag
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          IMAGE_TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.docker_version }}"
+          echo "$IMAGE_TAG" > build-info.txt
+          echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+      - name: Upload build info
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-info
+          path: build-info.txt
+          retention-days: 7
+
+  comment-pr:
+    name: Comment Pull Request
+    needs: [dockerize]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      pull-requests: write
+      packages: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Comment PR
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} --body "🚀 Docker image built successfully with tag: \`${{ needs.setup-version.outputs.docker_version }}\`
+
+          To test this image locally:
+          \`\`\`bash
+          docker pull ${{ env.REGISTRY }}/${{ github.repository }}:${{ needs.setup-version.outputs.docker_version }}
+          docker run --rm -p 4000:4000 -e SECRET_KEY_BASE=\$(openssl rand -base64 48) ${{ env.REGISTRY }}/${{ github.repository }}:${{ needs.setup-version.outputs.docker_version }}
+          \`\`\`"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy:
+    name: Deploy to Production
+    needs: [dockerize]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    environment:
+      name: ${{ github.event.inputs.environment || 'production' }}
+      url: ${{ vars.DEPLOYMENT_URL }}
+    # Manual approval required for deployment
+    concurrency:
+      group: ${{ github.event.inputs.environment || 'production' }}_environment
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - name: Download build info
+        uses: actions/download-artifact@v4
+        with:
+          name: build-info
+
+      - name: Set image tag
+        id: build-info
+        run: |
+          IMAGE_TAG=$(cat build-info.txt)
+          echo "Using image tag: $IMAGE_TAG"
+          echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          echo "${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Deploy via SSH
+        env:
+          IMAGE_TAG: ${{ steps.build-info.outputs.image_tag }}
+          DEPLOY_SERVER: ${{ secrets.DEPLOY_SERVER }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          # SSH to the server and update the docker-compose.yml file with the new image tag
+          ssh $DEPLOY_USER@$DEPLOY_SERVER "cd $DEPLOY_PATH && \
+            export IMAGE_TAG=$IMAGE_TAG && \
+            sed -i 's|image:.*lora:.*|image: $IMAGE_TAG|' docker-compose.yml && \
+            docker compose pull && \
+            docker compose up -d"
+
+      - name: Verify deployment
+        env:
+          DEPLOY_SERVER: ${{ secrets.DEPLOY_SERVER }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          ssh $DEPLOY_USER@$DEPLOY_SERVER "cd $DEPLOY_PATH && \
+            docker compose ps && \
+            echo 'Deployment completed successfully!'"
